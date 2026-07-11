@@ -1,0 +1,35 @@
+*prview.txt*                      Browse GitLab merge requests from Neovim
+
+==============================================================================
+CONTENTS                                                        *prview-contents*
+
+1. Introduction                                              |prview-introduction|
+2. Setup                                                            |prview-setup|
+3. Command                                                        |:PRView|
+
+==============================================================================
+INTRODUCTION                                              *prview-introduction*
+
+PRView browses open merge requests for the current repository's GitLab project.
+It is read-only and uses GitLab-provided patches without checking out branches.
+
+Required: glab and fzf-lua. Optional: delta for colored patch previews. Authenticate
+with GITLAB_TOKEN or `glab auth login`; PRView does not handle tokens itself.
+
+==============================================================================
+SETUP                                                            *prview-setup*
+
+>lua
+    require('prview').setup()
+<
+
+There are no feature-specific configuration options. Dependency checks and
+external processes are deferred until the command is invoked.
+
+==============================================================================
+:PRView                                                          *:PRView*
+
+Opens the open merge request picker. Highlight a merge request to load its file
+summary, then select it to browse and preview changed-file patches.
+
+vim:tw=78:ts=8:noet:ft=help:norl:
