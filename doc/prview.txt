@@ -47,7 +47,7 @@ smaller window:
     })
 <
 
-PRView retains its diff previewer, required tab-delimited selection fields,
+PRView retains its diff previewer, required selection fields,
 default and CTRL-O actions, and close cleanup. Additional fzf-lua actions, a
 tab-stop override, and a `winopts.on_close` callback are supported.
 
@@ -55,13 +55,13 @@ tab-stop override, and a `winopts.on_close` callback are supported.
 :PRView                                                          *:PRView*
 
 Opens the open merge request picker. Highlight a merge request to preview its
-complete, scrollable GitLab diff. Native fzf tab stops align its IID, author,
-full title, and latest-update time under the MR, Author, Title, and Updated
-column headers. Recent updates appear as relative time; older updates appear
-as a calendar date. The preview shows the diff. Delta formats and
-colors the diff when available; raw diff syntax is the fallback. Delta's
-formatted file and hunk headers are preserved. Press CTRL-O to open the
-highlighted merge request in GitLab without closing the picker. ENTER does not
-close or replace the picker.
+complete, scrollable GitLab diff. Each entry shows its IID, latest-update time, full title, and author as
+`!IID (updated) title <@author>`, colored like fzf-lua git commits, under the
+`MR Number (Last Updated Time) Title <Author>` header. Recent updates appear as
+relative time; older updates appear as a calendar date. The preview shows the
+diff. Delta formats and colors the diff when available; raw diff syntax is the
+fallback. Delta's formatted file and hunk headers are preserved. Press CTRL-O
+to open the highlighted merge request in GitLab without closing the picker.
+ENTER does not close or replace the picker.
 
 vim:tw=78:ts=8:noet:ft=help:norl:

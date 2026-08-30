@@ -55,9 +55,9 @@ local function pick_merge_request(items, handlers, configured)
         prompt = 'Merge requests> ',
     }, vim.deepcopy(configured))
     local required_fzf_opts = {
+        ['--ansi'] = true,
         ['--delimiter'] = '\t',
         ['--header'] = format.merge_request_header(),
-        ['--header-lines'] = 1,
         ['--with-nth'] = '2..',
     }
     opts.fzf_opts = vim.tbl_deep_extend('force', {}, opts.fzf_opts or {}, required_fzf_opts)

@@ -124,17 +124,35 @@ function M.friendly_updated_at(value, now)
     return string.format('%d %s %d', day, month_names[month], year)
 end
 
+local ansi = {
+    reset = '\27[0m',
+    yellow = '\27[0;33m',
+    green = '\27[0;32m',
+    blue = '\27[0;34m',
+}
+
+local function paint(color, text)
+    return ansi[color] .. text .. ansi.reset
+end
+
 function M.merge_request(mr)
-    return table.concat({
-        '!' .. display_text(mr.iid, '?'),
-        author_name(mr.author),
+    return string.format(
+        '%s %s %s %s',
+        paint('yellow', '!' .. display_text(mr.iid, '?')),
+        paint('green', '(' .. M.friendly_updated_at(mr.updated_at) .. ')'),
         display_text(mr.title, '(untitled)'),
-        M.friendly_updated_at(mr.updated_at),
-    }, '\t')
+        paint('blue', '<' .. author_name(mr.author) .. '>')
+    )
 end
 
 function M.merge_request_header()
-    return table.concat({ 'MR', 'Author', 'Title', 'Updated' }, '\t')
+    return string.format(
+        '%s %s %s %s',
+        paint('yellow', 'MR Number'),
+        paint('green', '(Last Updated Time)'),
+        'Title',
+        paint('blue', '<Author>')
+    )
 end
 
 return M

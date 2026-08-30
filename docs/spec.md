@@ -30,22 +30,24 @@ startup.
 
 `:PRView` asynchronously requests every page of open merge requests through
 `glab api`, ordered by most recent update. Each raw picker entry contains a
-hidden numeric selection index followed by tab-delimited IID, author, full title,
-and friendly latest-update time fields. The picker header labels these columns
-`MR`, `Author`, `Title`, and `Updated`. fzf expands the tabs with a tab stop of
-four by default; users may override the tab stop through `fzf_lua.fzf_opts`.
+hidden numeric selection index followed by a visible line in the form
+`!<iid> (<updated>) <title> <@author>`. The picker header labels this format
+as `MR Number (Last Updated Time) Title <Author>`. The hidden index is
+tab-delimited from the visible line; fzf expands tabs with a tab stop of four
+by default, and users may override the tab stop through `fzf_lua.fzf_opts`.
 The request uses glab's `:fullpath` placeholder so nested project paths are
 requested directly without a preliminary project-ID lookup.
-PRView performs no manual column padding, truncation, or per-field ANSI styling,
-leaving entry rendering and theme colors to fzf-lua and fzf. The visible IID,
-author, and title are searchable. Control characters in GitLab-provided display
-fields are replaced with spaces before the entry is assembled. Draft state is
-omitted from picker rows.
+PRView performs no manual column padding or truncation. It wraps the IID in
+yellow, the parenthesized update time in green, and the angle-bracketed author
+in blue, matching fzf-lua's git commit picker, and enables fzf `--ansi` so those
+colors render. The title stays uncolored. The visible IID, update time, title,
+and author remain searchable because fzf strips ANSI codes while matching.
+Control characters in GitLab-provided display fields are replaced with spaces
+before the entry is assembled. Draft state is omitted from picker rows.
 
 PRView forwards resolved `fzf_lua` settings to the picker invocation. Users may
-customize presentation and add actions. PRView retains its diff previewer,
-encoded selection field, tab-delimited visible fields, default and `Ctrl-O`
-actions, and cancellation on close. A configured `winopts.on_close` callback
+customize presentation and add actions. PRView retains its diff previewer, encoded selection field, visible line
+format, default and `Ctrl-O` actions, and cancellation on close. A configured `winopts.on_close` callback
 runs after PRView cleanup.
 
 Focusing an entry asynchronously runs
@@ -90,11 +92,10 @@ sanitized before display.
 ## Testing
 
 Tests cover configuration defaults, overrides, validation and forwarding;
-native tab-delimited entry formatting and header, author fallbacks, tab-stop
-overrides, complete multibyte titles and remote value sanitization; GitLab
-normalization and pagination; raw-diff command construction; identifier
-validation; Delta rendering and fallback; friendly preview update metadata;
-lazy loading;
+entry formatting and header, git-log ANSI field colors, author fallbacks,
+tab-stop overrides, complete multibyte titles and remote value sanitization; GitLab normalization and
+pagination; raw-diff command construction; identifier validation; Delta
+rendering and fallback; friendly preview update metadata; lazy loading;
 caching; retry; cancellation and stale callbacks; the single-picker lifecycle;
 non-closing actions; URL-handler errors; deferred dependency checks; and error
 sanitization. Tests require no network, credentials, or external executables.

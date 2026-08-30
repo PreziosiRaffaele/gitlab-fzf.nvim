@@ -14,46 +14,69 @@ local function merge_request(overrides)
     }, overrides or {})
 end
 
-T['formats native tab-delimited picker fields'] = function()
+local function strip_ansi(text)
+    return (text:gsub('\27%[[%d;]*m', ''))
+end
+
+local function paint(code, text)
+    return '\27[' .. code .. 'm' .. text .. '\27[0m'
+end
+
+local function entry(overrides)
+    local mr = merge_request(overrides)
+    return format.merge_request(mr), format.friendly_updated_at(mr.updated_at)
+end
+
+T['formats picker fields as IID, updated time, title, and author'] = function()
+    local formatted, updated = entry()
+    eq(strip_ansi(formatted), '!7 (' .. updated .. ') Full diff preview <@alice>')
+    formatted, updated = entry({ draft = false, title = 'Ready' })
+    eq(strip_ansi(formatted), '!7 (' .. updated .. ') Ready <@alice>')
+    formatted, updated = entry({ author = { username = vim.NIL, name = 'Alice' } })
+    eq(strip_ansi(formatted), '!7 (' .. updated .. ') Full diff preview <Alice>')
+    formatted, updated = entry({ author = vim.NIL })
+    eq(strip_ansi(formatted), '!7 (' .. updated .. ') Full diff preview <?>')
+end
+
+T['colors IID, update time, and author like git commits'] = function()
+    local formatted, updated = entry()
     eq(
-        format.merge_request(merge_request()):match('^!7\t@alice\tFull diff preview\t'),
-        '!7\t@alice\tFull diff preview\t'
-    )
-    eq(
-        format.merge_request(merge_request({ draft = false, title = 'Ready' })):match('^!7\t@alice\tReady\t'),
-        '!7\t@alice\tReady\t'
-    )
-    eq(
-        format
-            .merge_request(merge_request({ author = { username = vim.NIL, name = 'Alice' } }))
-            :match('^!7\tAlice\tFull diff preview\t'),
-        '!7\tAlice\tFull diff preview\t'
-    )
-    eq(
-        format.merge_request(merge_request({ author = vim.NIL })):match('^!7\t%?\tFull diff preview\t'),
-        '!7\t?\tFull diff preview\t'
+        formatted,
+        paint('0;33', '!7')
+            .. ' '
+            .. paint('0;32', '(' .. updated .. ')')
+            .. ' Full diff preview '
+            .. paint('0;34', '<@alice>')
     )
 end
 
-T['keeps long and multibyte titles without manual styling'] = function()
+T['keeps long and multibyte titles without styling the title'] = function()
     local title = '界面 keeps this complete even when it is much longer than one tab stop'
-    local entry = format.merge_request(merge_request({ title = title }))
-    eq(entry:match('^!7\t@alice\t' .. title .. '\t'), '!7\t@alice\t' .. title .. '\t')
-    eq(entry:find('\27', 1, true), nil)
+    local formatted, updated = entry({ title = title })
+    eq(strip_ansi(formatted), '!7 (' .. updated .. ') ' .. title .. ' <@alice>')
+    eq(formatted:find(title, 1, true) ~= nil, true)
 end
 
-T['sanitizes remote values before creating tab fields'] = function()
-    local entry = format.merge_request(merge_request({
+T['sanitizes remote values before creating picker fields'] = function()
+    local formatted, updated = entry({
         title = 'Fix\tline\nbreak\27[31m',
         author = { username = 'ali\nce' },
-    }))
-    local _, tab_count = entry:gsub('\t', '')
-    eq(tab_count, 3)
-    eq(entry:match('^!7\t@ali ce\tFix line break %[31m\t'), '!7\t@ali ce\tFix line break [31m\t')
+    })
+    local _, tab_count = formatted:gsub('\t', '')
+    eq(tab_count, 0)
+    eq(strip_ansi(formatted), '!7 (' .. updated .. ') Fix line break [31m <@ali ce>')
 end
 
-T['formats the picker column header'] = function()
-    eq(format.merge_request_header(), 'MR\tAuthor\tTitle\tUpdated')
+T['formats the picker header'] = function()
+    eq(strip_ansi(format.merge_request_header()), 'MR Number (Last Updated Time) Title <Author>')
+    eq(
+        format.merge_request_header(),
+        paint('0;33', 'MR Number')
+            .. ' '
+            .. paint('0;32', '(Last Updated Time)')
+            .. ' Title '
+            .. paint('0;34', '<Author>')
+    )
 end
 
 T['formats friendly update times from GitLab timestamps'] = function()
