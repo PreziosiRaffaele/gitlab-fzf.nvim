@@ -61,12 +61,13 @@ complete, scrollable GitLab diff. Each entry shows its IID, latest-update time,
 full title, and author as `!IID (updated) title <@author>`, colored like fzf-lua
 git commits, under the `MR Number (Last Updated Time) Title <Author>` header.
 Recent updates appear as relative time; older updates appear as a calendar
-date. The preview shows the diff. Delta formats and colors the diff when
-available; raw diff syntax is the fallback. Delta's formatted file and hunk
-headers are preserved. Press CTRL-O to open the highlighted merge request in
-GitLab without closing the picker. Press CTRL-B to close the picker and check
-out the highlighted merge request's source branch through `glab`. After a
-successful checkout, GitLab Fzf checks for files changed on disk. ENTER does
-not close or replace the picker.
-
-vim:tw=78:ts=8:noet:ft=help:norl:
+date. The preview begins with the merge request title, branches, status,
+reviewers, labels, and first description paragraph. After loading, it also
+shows changed-file counts grouped by top-level repository area, followed by the
+diff. Changed areas come from the existing raw diff without another GitLab
+request. Delta formats and colors the diff when available; raw diff syntax is
+the fallback. Delta's formatted file and hunk headers are preserved. Press
+CTRL-O to open the highlighted merge request in GitLab without closing the
+picker. Press CTRL-B to close the picker and check out the highlighted merge 
+request's source branch through `glab`. After a successful checkout, GitLab Fzf 
+checks for files changed on disk. 
