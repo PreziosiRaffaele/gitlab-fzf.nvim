@@ -76,6 +76,15 @@ local function pick_merge_request(items, handlers, configured)
             exec_silent = true,
             header = 'open in GitLab',
         },
+        ['ctrl-b'] = {
+            fn = function(lines)
+                local item = selected(items, lines)
+                if item and handlers.checkout then
+                    handlers.checkout(item)
+                end
+            end,
+            header = 'check out source branch',
+        },
     })
     opts.previewer = memory_previewer(items, function(item, update)
         handlers.focus(item, update)

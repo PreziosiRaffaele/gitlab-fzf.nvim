@@ -28,7 +28,7 @@ local function sanitize(value)
     return vim.trim(value)
 end
 
-local function error_for(result)
+local function error_for(result, fallback)
     local detail = sanitize(result.stderr)
     local lower = detail:lower()
     if lower:find('502') and lower:find('bad gateway') then
@@ -40,7 +40,15 @@ local function error_for(result)
     elseif lower:find('remote') or lower:find('hostname') then
         return 'No GitLab remote recognized by glab for this repository. Check the remote and `glab auth status`.'
     end
-    return 'GitLab request failed' .. (detail ~= '' and ': ' .. detail or '.')
+    return (fallback or 'GitLab request failed') .. (detail ~= '' and ': ' .. detail or '.')
+end
+
+local function merge_request_iid(mr)
+    local iid = tonumber(mr and mr.iid)
+    if not iid or iid < 1 or iid % 1 ~= 0 then
+        return nil, 'GitLab returned an invalid merge request identifier.'
+    end
+    return iid
 end
 
 -- Accept an array, NDJSON, or the concatenated arrays emitted by paginated glab.
@@ -117,9 +125,9 @@ function M.new(opts)
     end
 
     function transport.get_merge_request_diff(mr, callback)
-        local iid = tonumber(mr and mr.iid)
-        if not iid or iid < 1 or iid % 1 ~= 0 then
-            callback(nil, 'GitLab returned an invalid merge request identifier.')
+        local iid, err = merge_request_iid(mr)
+        if not iid then
+            callback(nil, err)
             return { cancel = function() end }
         end
         return runner(
@@ -133,6 +141,21 @@ function M.new(opts)
                 callback(result.stdout or '', nil)
             end
         )
+    end
+
+    function transport.checkout_merge_request(mr, callback)
+        local iid, err = merge_request_iid(mr)
+        if not iid then
+            callback(nil, err)
+            return { cancel = function() end }
+        end
+        return runner({ 'glab', 'mr', 'checkout', tostring(iid) }, { text = true }, function(result)
+            if result.code ~= 0 then
+                callback(nil, error_for(result, 'Unable to check out merge request'))
+                return
+            end
+            callback(result.stdout or '', nil)
+        end)
     end
 
     return transport

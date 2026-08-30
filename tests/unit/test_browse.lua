@@ -195,6 +195,55 @@ T['opens a valid GitLab web URL and rejects invalid URLs'] = function()
     eq(notified, 'This merge request does not have a valid GitLab web URL.')
 end
 
+T['checks out the source branch, refreshes buffers, and reports success'] = function()
+    local checked_out, refreshed, notification
+    local ctx, get_handlers = context({
+        transport = {
+            checkout_merge_request = function(value, callback)
+                checked_out = value
+                callback('checked out feature')
+            end,
+        },
+        refresh = function()
+            refreshed = true
+        end,
+        notify = function(message, level)
+            notification = { message, level }
+        end,
+    })
+    browse.start(ctx)
+    get_handlers().checkout(mr)
+
+    eq(checked_out, mr)
+    eq(refreshed, true)
+    eq(notification, {
+        'Checked out the source branch for merge request !2.',
+        vim.log.levels.INFO,
+    })
+end
+
+T['reports checkout failures without refreshing buffers'] = function()
+    local refreshed, notification
+    local ctx, get_handlers = context({
+        transport = {
+            checkout_merge_request = function(_, callback)
+                callback(nil, 'checkout failed')
+            end,
+        },
+        refresh = function()
+            refreshed = true
+        end,
+        notify = function(message, level)
+            notification = { message, level }
+        end,
+    })
+    browse.start(ctx)
+    get_handlers().checkout(mr)
+
+    eq(refreshed, nil)
+    eq(notification, { 'checkout failed', nil })
+end
+
 T['ignores a late merge request list after cancellation'] = function()
     local list_callback, opened
     local operation = browse.start({
