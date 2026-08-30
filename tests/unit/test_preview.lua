@@ -2,30 +2,73 @@ local preview = require('prview.preview')
 local eq = MiniTest.expect.equality
 local T = MiniTest.new_set()
 
-T['builds added patch with dev null'] = function()
-    local patch = preview.patch({ status = 'A', old_path = 'x', new_path = 'x', patch = '@@ -0,0 +1 @@\n+x' })
-    eq(patch, 'diff --git a/x b/x\n--- /dev/null\n+++ b/x\n@@ -0,0 +1 @@\n+x')
-end
+local diff = 'diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -1 +1 @@\n-a\n+b\n'
 
-T['describes unavailable patch'] = function()
-    local patch, message = preview.patch({ binary = true })
-    eq(patch, nil)
-    eq(message, 'Binary change; no textual patch is available.')
-end
-
-T['falls back when delta fails'] = function()
-    local result
-    preview.render(
-        { status = 'M', old_path = 'x', new_path = 'x', patch = '@@ -1 +1 @@\n-a\n+b' },
-        function(_, _, callback)
-            callback({ code = 1, stderr = 'no delta' })
+T['renders a complete raw diff through delta'] = function()
+    local argv, opts, result
+    local renderer = preview.new({
+        executable = function(name)
+            eq(name, 'delta')
+            return 1
         end,
-        function(content, syntax)
+        runner = function(value, options, callback)
+            argv, opts = value, options
+            callback({ code = 0, stdout = '\27[32m+b\27[0m\n' })
+        end,
+    })
+    renderer.render(diff, function(content, syntax)
+        result = { content, syntax }
+    end)
+    eq(argv, { 'delta', '--paging=never', '--color-only' })
+    eq(opts, { text = true, stdin = diff })
+    eq(result, { '\27[32m+b\27[0m\n', 'ansi' })
+end
+
+T['uses diff syntax when delta is unavailable'] = function()
+    local ran, result
+    local renderer = preview.new({
+        executable = function()
+            return 0
+        end,
+        runner = function()
+            ran = true
+        end,
+    })
+    renderer.render(diff, function(content, syntax)
+        result = { content, syntax }
+    end)
+    eq(ran, nil)
+    eq(result, { diff, 'diff' })
+end
+
+T['falls back to the raw diff when delta fails'] = function()
+    local result
+    local renderer = preview.new({
+        executable = function()
+            return 1
+        end,
+        runner = function(_, _, callback)
+            callback({ code = 1, stderr = 'delta failed' })
+        end,
+    })
+    renderer.render(diff, function(content, syntax)
+        result = { content, syntax }
+    end)
+    eq(result, { diff, 'diff' })
+end
+
+T['describes an empty raw diff'] = function()
+    local result
+    preview
+        .new({
+            executable = function()
+                return 0
+            end,
+        })
+        .render('', function(content, syntax)
             result = { content, syntax }
-        end
-    )
-    eq(result[2], 'diff')
-    eq(result[1]:find('diff --git a/x b/x', 1, true) ~= nil, true)
+        end)
+    eq(result, { 'This merge request has no textual changes.', 'text' })
 end
 
 return T

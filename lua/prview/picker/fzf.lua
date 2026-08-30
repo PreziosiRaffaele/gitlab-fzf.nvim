@@ -1,15 +1,6 @@
 local format = require('prview.format')
-local preview = require('prview.preview')
 
 local M = {}
-
-local function runner(argv, opts, callback)
-    vim.system(argv, opts, function(result)
-        vim.schedule(function()
-            callback(result)
-        end)
-    end)
-end
 
 local function entries(items, formatter)
     local result = {}
@@ -59,44 +50,32 @@ end
 
 function M.pick_merge_request(items, handlers)
     local fzf = require('fzf-lua')
-    local accepted = false
     fzf.fzf_exec(entries(items, handlers.format or format.merge_request), {
         prompt = 'Merge requests> ',
         fzf_opts = { ['--delimiter'] = '\t', ['--with-nth'] = '2..' },
         actions = {
-            ['default'] = function(lines)
-                local item = selected(items, lines)
-                if item then
-                    accepted = true
-                    handlers.select(item)
-                end
-            end,
+            ['default'] = { fn = function() end, exec_silent = true },
+            ['ctrl-o'] = {
+                fn = function(lines)
+                    local item = selected(items, lines)
+                    if item and handlers.open_web then
+                        handlers.open_web(item)
+                    end
+                end,
+                exec_silent = true,
+                header = 'open in GitLab',
+            },
         },
         previewer = memory_previewer(items, function(item, update)
             handlers.focus(item, update)
         end),
         winopts = {
             on_close = function()
-                if not accepted and handlers.cancel then
+                if handlers.cancel then
                     handlers.cancel()
                 end
             end,
         },
-    })
-end
-
-function M.pick_changed_file(items, handlers)
-    local fzf = require('fzf-lua')
-    fzf.fzf_exec(entries(items, handlers.format or format.changed_file), {
-        prompt = 'Changed files> ',
-        fzf_opts = { ['--delimiter'] = '\t', ['--with-nth'] = '2..' },
-        actions = { ['default'] = function() end },
-        previewer = memory_previewer(items, function(item, update)
-            preview.render(item, runner, function(content, syntax)
-                update(content, syntax)
-            end)
-        end),
-        winopts = { on_close = handlers.cancel },
     })
 end
 

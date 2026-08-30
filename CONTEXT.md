@@ -9,14 +9,9 @@ performing repository or review mutations.
 A GitLab proposal to merge changes from a source branch into a target branch.
 _Avoid_: Pull request, PR
 
-**Changed file**:
-A file-level change belonging to a merge request, including its path, change
-status, and patch when GitLab makes one available.
-_Avoid_: Diff
-
-**Patch**:
-The textual unified-diff representation of one changed file.
-_Avoid_: Changed file, full diff
+**Raw diff**:
+The complete textual diff returned by GitLab for a merge request.
+_Avoid_: Patch, changed file
 
 **GitLab instance**:
 The GitLab installation that hosts a project, whether GitLab.com, GitLab

@@ -2,53 +2,103 @@ local gitlab = require('prview.gitlab')
 local eq = MiniTest.expect.equality
 local T = MiniTest.new_set()
 
-T['normalizes merge requests'] = function()
+T['normalizes merge requests for the picker'] = function()
     eq(
         gitlab._normalize_mr({
             iid = 2,
-            title = 'x',
+            title = 'Review me',
             project_id = 3,
-            source_branch = 'a',
-            target_branch = 'b',
+            author = { username = 'alice' },
+            source_branch = 'feature',
+            target_branch = 'main',
+            updated_at = '2026-08-30T10:00:00Z',
             work_in_progress = true,
+            web_url = 'https://gitlab.example.com/group/project/-/merge_requests/2',
         }),
         {
             project_id = 3,
             iid = 2,
-            title = 'x',
-            author = nil,
-            source_project_id = nil,
-            target_project_id = nil,
-            source_branch = 'a',
-            target_branch = 'b',
-            head_sha = nil,
-            updated_at = nil,
+            title = 'Review me',
+            author = { username = 'alice' },
+            source_branch = 'feature',
+            target_branch = 'main',
+            updated_at = '2026-08-30T10:00:00Z',
             draft = true,
-            web_url = nil,
+            web_url = 'https://gitlab.example.com/group/project/-/merge_requests/2',
         }
     )
 end
 
-T['normalizes statuses and counts hunk lines'] = function()
-    local file = gitlab._normalize_file({
-        old_path = 'a',
-        new_path = 'b',
-        renamed_file = true,
-        diff = '@@ -1 +1,2 @@\n-old\n+new\n+another',
+T['lists every page of open merge requests'] = function()
+    local argv, result
+    local transport = gitlab.new({
+        runner = function(value, _, callback)
+            argv = value
+            callback({ code = 0, stdout = '[{"iid":1,"project_id":3}]\n[{"iid":2,"project_id":3}]\n' })
+        end,
     })
-    eq({ file.status, file.additions, file.deletions }, { 'R', 2, 1 })
-end
-
-T['consumes ndjson pages'] = function()
-    local result = gitlab._decode_pages('[{"iid":1}]\n[{"iid":2}]\n')
+    transport.list_merge_requests(function(value)
+        result = value
+    end)
+    eq(argv, {
+        'glab',
+        'api',
+        '--paginate',
+        '--output',
+        'ndjson',
+        'projects/:id/merge_requests?state=opened&order_by=updated_at&sort=desc&per_page=100',
+    })
     eq({ result[1].iid, result[2].iid }, { 1, 2 })
 end
 
-T['sanitizes credentials'] = function()
-    eq(
-        gitlab._sanitize('request https://secret@example.com failed token=abc'),
-        'request https://example.com failed token=[REDACTED]'
-    )
+T['retrieves the raw merge request diff'] = function()
+    local argv, opts, result
+    local transport = gitlab.new({
+        runner = function(value, options, callback)
+            argv, opts = value, options
+            callback({ code = 0, stdout = 'diff --git a/x b/x\n' })
+            return { cancel = function() end }
+        end,
+    })
+    transport.get_merge_request_diff({ iid = 7 }, function(value, err)
+        result = { value, err }
+    end)
+    eq(argv, { 'glab', 'mr', 'diff', '7', '--raw', '--color=never' })
+    eq(opts, { text = true })
+    eq(result, { 'diff --git a/x b/x\n', nil })
+end
+
+T['rejects an invalid merge request identifier before running glab'] = function()
+    local called, err
+    local transport = gitlab.new({
+        runner = function()
+            called = true
+        end,
+    })
+    transport.get_merge_request_diff({ iid = '--help' }, function(_, value)
+        err = value
+    end)
+    eq(called, nil)
+    eq(err, 'GitLab returned an invalid merge request identifier.')
+end
+
+T['reports and sanitizes raw diff failures'] = function()
+    local err
+    local transport = gitlab.new({
+        runner = function(_, _, callback)
+            callback({ code = 1, stderr = 'request https://secret@example.com failed token=abc' })
+        end,
+    })
+    transport.get_merge_request_diff({ iid = 7 }, function(_, value)
+        err = value
+    end)
+    eq(err, 'GitLab request failed: request https://example.com failed token=[REDACTED]')
+end
+
+T['rejects malformed paginated JSON'] = function()
+    local result, err = gitlab._decode_pages('{broken')
+    eq(result, nil)
+    eq(err, 'GitLab returned malformed or unsupported JSON.')
 end
 
 return T

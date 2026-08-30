@@ -7,6 +7,22 @@ local function notify(message, level)
     vim.notify(message, level or vim.log.levels.ERROR, { title = 'PRView' })
 end
 
+local function system_open(url, opener)
+    local ok, command, err = pcall(opener or vim.ui.open, url)
+    if not ok then
+        return tostring(command)
+    elseif not command then
+        return tostring(err or 'no system URL handler is available')
+    end
+end
+
+local function open_url(url)
+    local err = system_open(url)
+    if err then
+        notify('Unable to open merge request in GitLab: ' .. err)
+    end
+end
+
 local function dependency_error()
     if vim.fn.executable('glab') ~= 1 then
         return 'PRView requires `glab`. Install it, then authenticate with `glab auth login` or GITLAB_TOKEN.'
@@ -29,8 +45,15 @@ function M.open()
     end
 
     local transport = overrides.transport or require('prview.gitlab').new()
+    local renderer = overrides.renderer or require('prview.preview').new()
     local picker = overrides.picker or require('prview.picker.fzf')
-    active = require('prview.browse').start({ transport = transport, picker = picker, notify = notify })
+    active = require('prview.browse').start({
+        transport = transport,
+        renderer = renderer,
+        picker = picker,
+        notify = notify,
+        open_url = overrides.open_url or open_url,
+    })
 end
 
 function M.setup(opts)
@@ -41,5 +64,7 @@ function M.setup(opts)
         desc = 'Browse GitLab merge requests',
     })
 end
+
+M._system_open = system_open
 
 return M

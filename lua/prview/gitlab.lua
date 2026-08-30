@@ -1,5 +1,12 @@
 local M = {}
 
+local function nullable(value)
+    if value == vim.NIL then
+        return nil
+    end
+    return value
+end
+
 local function default_runner(argv, opts, callback)
     local proc = vim.system(argv, opts, function(result)
         vim.schedule(function()
@@ -61,61 +68,17 @@ local function decode_pages(output)
     return items
 end
 
-local function line_counts(patch)
-    if type(patch) ~= 'string' or patch == '' then
-        return nil, nil
-    end
-    local additions, deletions = 0, 0
-    for line in (patch .. '\n'):gmatch('(.-)\n') do
-        if line:sub(1, 1) == '+' and line:sub(1, 3) ~= '+++' then
-            additions = additions + 1
-        end
-        if line:sub(1, 1) == '-' and line:sub(1, 3) ~= '---' then
-            deletions = deletions + 1
-        end
-    end
-    return additions, deletions
-end
-
 local function normalize_mr(raw)
     return {
         project_id = raw.project_id or raw.target_project_id,
         iid = raw.iid,
-        title = raw.title or '',
-        author = raw.author,
-        source_project_id = raw.source_project_id,
-        target_project_id = raw.target_project_id,
-        source_branch = raw.source_branch or '',
-        target_branch = raw.target_branch or '',
-        head_sha = raw.sha or (raw.diff_refs and raw.diff_refs.head_sha),
-        updated_at = raw.updated_at,
+        title = nullable(raw.title) or '',
+        author = nullable(raw.author),
+        source_branch = nullable(raw.source_branch) or '',
+        target_branch = nullable(raw.target_branch) or '',
+        updated_at = nullable(raw.updated_at),
         draft = raw.draft == true or raw.work_in_progress == true,
-        web_url = raw.web_url,
-    }
-end
-
-local function normalize_file(raw)
-    local renamed = raw.renamed_file == true
-    local status = raw.new_file and 'A' or raw.deleted_file and 'D' or renamed and 'R' or 'M'
-    local patch = raw.diff or raw.patch
-    local additions, deletions = line_counts(patch)
-    local unavailable = raw.binary or raw.too_large or raw.collapsed
-    if unavailable then
-        additions, deletions = nil, nil
-    end
-    return {
-        old_path = raw.old_path,
-        new_path = raw.new_path,
-        status = status,
-        patch = patch,
-        additions = additions,
-        deletions = deletions,
-        renamed = renamed,
-        deleted = raw.deleted_file == true,
-        generated = raw.generated_file == true,
-        collapsed = raw.collapsed == true,
-        too_large = raw.too_large == true,
-        binary = raw.binary == true,
+        web_url = nullable(raw.web_url),
     }
 end
 
@@ -151,12 +114,22 @@ function M.new(opts)
         )
     end
 
-    function transport.list_changed_files(mr, callback)
-        local project = assert(mr.project_id or mr.target_project_id, 'merge request project identity is required')
-        return request(
-            string.format('projects/%s/merge_requests/%s/diffs?per_page=100', project, mr.iid),
-            normalize_file,
-            callback
+    function transport.get_merge_request_diff(mr, callback)
+        local iid = tonumber(mr and mr.iid)
+        if not iid or iid < 1 or iid % 1 ~= 0 then
+            callback(nil, 'GitLab returned an invalid merge request identifier.')
+            return { cancel = function() end }
+        end
+        return runner(
+            { 'glab', 'mr', 'diff', tostring(iid), '--raw', '--color=never' },
+            { text = true },
+            function(result)
+                if result.code ~= 0 then
+                    callback(nil, error_for(result))
+                    return
+                end
+                callback(result.stdout or '', nil)
+            end
         )
     end
 
@@ -165,7 +138,6 @@ end
 
 M._decode_pages = decode_pages
 M._normalize_mr = normalize_mr
-M._normalize_file = normalize_file
 M._sanitize = sanitize
 
 return M
