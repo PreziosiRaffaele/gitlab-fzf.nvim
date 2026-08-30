@@ -46,9 +46,9 @@ require('prview').setup({
 
 Run `:PRView` and highlight an open merge request to load its complete,
 scrollable GitLab diff in the preview. Native fzf tab stops align the merge
-request IID, author, and title without a column header; the preview shows the
-complete state, branch, and update metadata above the diff. Delta formats and
-colors the diff when installed; raw diff syntax is the fallback. Press
+request IID, author, title, and relative latest-update time under the MR,
+Author, Title, and Updated column headers. The preview shows the diff. Delta
+formats and colors the diff when installed; raw diff syntax is the fallback. Press
 `Ctrl-O` to open the highlighted merge request in GitLab without closing the
 picker. No external process or dependency check runs during startup.
 

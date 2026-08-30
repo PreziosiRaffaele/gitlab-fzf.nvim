@@ -30,9 +30,10 @@ startup.
 
 `:PRView` asynchronously requests every page of open merge requests through
 `glab api`, ordered by most recent update. Each raw picker entry contains a
-hidden numeric selection index followed by tab-delimited IID, author, and full
-title fields. PRView adds no column header. fzf expands the tabs with a tab stop
-of four by default; users may override the tab stop through `fzf_lua.fzf_opts`.
+hidden numeric selection index followed by tab-delimited IID, author, full title,
+and friendly latest-update time fields. The picker header labels these columns
+`MR`, `Author`, `Title`, and `Updated`. fzf expands the tabs with a tab stop of
+four by default; users may override the tab stop through `fzf_lua.fzf_opts`.
 The request uses glab's `:fullpath` placeholder so nested project paths are
 requested directly without a preliminary project-ID lookup.
 PRView performs no manual column padding, truncation, or per-field ANSI styling,
@@ -50,10 +51,9 @@ runs after PRView cleanup.
 Focusing an entry asynchronously runs
 `glab mr diff <iid> --raw --color=never`. The preview first shows a loading
 message, then the complete scrollable raw diff returned by GitLab. A plain-text
-header above loading, error, and diff content repeats the draft state, full
-title, author, complete branch route, and exact update time. GitLab's own merge
-request diff limits still apply. Empty output produces a concise
-no-textual-changes message.
+header above loading, error, and diff content shows the raw diff state only.
+GitLab's own merge request diff limits still apply.
+Empty output produces a concise no-textual-changes message.
 
 When Delta is executable, PRView passes the raw diff to
 `delta --paging=never` and displays its fully formatted ANSI output, including
@@ -90,10 +90,11 @@ sanitized before display.
 ## Testing
 
 Tests cover configuration defaults, overrides, validation and forwarding;
-headerless native tab-delimited entry formatting, author fallbacks, tab-stop
+native tab-delimited entry formatting and header, author fallbacks, tab-stop
 overrides, complete multibyte titles and remote value sanitization; GitLab
 normalization and pagination; raw-diff command construction; identifier
-validation; Delta rendering and fallback; preview metadata; lazy loading;
+validation; Delta rendering and fallback; friendly preview update metadata;
+lazy loading;
 caching; retry; cancellation and stale callbacks; the single-picker lifecycle;
 non-closing actions; URL-handler errors; deferred dependency checks; and error
 sanitization. Tests require no network, credentials, or external executables.

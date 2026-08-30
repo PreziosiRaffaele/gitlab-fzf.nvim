@@ -15,19 +15,30 @@ local function merge_request(overrides)
 end
 
 T['formats native tab-delimited picker fields'] = function()
-    eq(format.merge_request(merge_request()), '!7\t@alice\tFull diff preview')
-    eq(format.merge_request(merge_request({ draft = false, title = 'Ready' })), '!7\t@alice\tReady')
     eq(
-        format.merge_request(merge_request({ author = { username = vim.NIL, name = 'Alice' } })),
-        '!7\tAlice\tFull diff preview'
+        format.merge_request(merge_request()):match('^!7\t@alice\tFull diff preview\t'),
+        '!7\t@alice\tFull diff preview\t'
     )
-    eq(format.merge_request(merge_request({ author = vim.NIL })), '!7\t?\tFull diff preview')
+    eq(
+        format.merge_request(merge_request({ draft = false, title = 'Ready' })):match('^!7\t@alice\tReady\t'),
+        '!7\t@alice\tReady\t'
+    )
+    eq(
+        format
+            .merge_request(merge_request({ author = { username = vim.NIL, name = 'Alice' } }))
+            :match('^!7\tAlice\tFull diff preview\t'),
+        '!7\tAlice\tFull diff preview\t'
+    )
+    eq(
+        format.merge_request(merge_request({ author = vim.NIL })):match('^!7\t%?\tFull diff preview\t'),
+        '!7\t?\tFull diff preview\t'
+    )
 end
 
 T['keeps long and multibyte titles without manual styling'] = function()
     local title = '界面 keeps this complete even when it is much longer than one tab stop'
     local entry = format.merge_request(merge_request({ title = title }))
-    eq(entry, '!7\t@alice\t' .. title)
+    eq(entry:match('^!7\t@alice\t' .. title .. '\t'), '!7\t@alice\t' .. title .. '\t')
     eq(entry:find('\27', 1, true), nil)
 end
 
@@ -37,16 +48,30 @@ T['sanitizes remote values before creating tab fields'] = function()
         author = { username = 'ali\nce' },
     }))
     local _, tab_count = entry:gsub('\t', '')
-    eq(tab_count, 2)
-    eq(entry, '!7\t@ali ce\tFix line break [31m')
+    eq(tab_count, 3)
+    eq(entry:match('^!7\t@ali ce\tFix line break %[31m\t'), '!7\t@ali ce\tFix line break [31m\t')
 end
 
-T['formats complete metadata for the diff preview'] = function()
-    eq(
-        format.preview_header(merge_request()),
-        'Merge request !7 · DRAFT · Full diff preview\n'
-            .. 'Author @alice │ feature → main │ Updated 2026-08-30 10:00:00 UTC'
-    )
+T['formats the picker column header'] = function()
+    eq(format.merge_request_header(), 'MR\tAuthor\tTitle\tUpdated')
+end
+
+T['formats friendly update times from GitLab timestamps'] = function()
+    local now = 1788091445
+    eq(format.friendly_updated_at('2026-08-30T12:03:00Z', now), '1 minute ago')
+    eq(format.friendly_updated_at('2026-08-30T12:00:00Z', now), '4 minutes ago')
+    eq(format.friendly_updated_at('2026-08-30T10:00:00Z', now), '2 hours ago')
+    eq(format.friendly_updated_at('2026-08-27T12:04:05Z', now), '3 days ago')
+    eq(format.friendly_updated_at('2026-08-20T12:04:05Z', now), '20 Aug 2026')
+end
+
+T['accepts offsets and handles unusable update times'] = function()
+    local now = 1788091445
+    eq(format.friendly_updated_at('2026-08-30T12:00:00+02:00', now), '2 hours ago')
+    eq(format.friendly_updated_at('2026-08-30T13:05:00Z', now), 'just now')
+    eq(format.friendly_updated_at('not a timestamp', now), 'unknown')
+    eq(format.friendly_updated_at('2026-08-30T12:00:00+', now), 'unknown')
+    eq(format.friendly_updated_at(nil, now), 'unknown')
 end
 
 return T

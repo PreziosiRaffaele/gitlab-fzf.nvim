@@ -48,7 +48,7 @@ T['forwards configured options while retaining PRView behavior'] = function()
     eq(captured.fzf_opts['--info'], 'inline')
     eq(captured.fzf_opts['--ansi'], false)
     eq(captured.fzf_opts['--delimiter'], '\t')
-    eq(captured.fzf_opts['--header-lines'], false)
+    eq(captured.fzf_opts['--header-lines'], 1)
     eq(captured.fzf_opts['--tabstop'], 4)
     eq(captured.fzf_opts['--with-nth'], '2..')
     eq(captured.actions['ctrl-x'], custom_action)
@@ -63,15 +63,17 @@ T['forwards configured options while retaining PRView behavior'] = function()
     eq(configured.winopts.on_close ~= captured.winopts.on_close, true)
 end
 
-T['passes item rows without a column header and retains hidden selection indexes'] = function()
+T['passes item rows with a column header and retains hidden selection indexes'] = function()
     local captured = capture_picker({
         focus = function() end,
     })
 
     eq(captured.fzf_opts['--tabstop'], 4)
     eq(#captured._input, 2)
-    eq(captured._input[1], '1\t!1\t?\tOne')
-    eq(captured._input[2], '2\t!2\t?\tTwo')
+    eq(captured._input[1]:match('^1\t!1\t%?\tOne\t'), '1\t!1\t?\tOne\t')
+    eq(captured._input[2]:match('^2\t!2\t%?\tTwo\t'), '2\t!2\t?\tTwo\t')
+    eq(captured.fzf_opts['--header'], 'MR\tAuthor\tTitle\tUpdated')
+    eq(captured.fzf_opts['--header-lines'], 1)
 end
 
 T['opens fullscreen and keeps enter on the single picker'] = function()

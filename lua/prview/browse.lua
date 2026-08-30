@@ -87,10 +87,9 @@ function M.start(ctx)
         ctx.picker.pick_merge_request(items, {
             format = format.merge_request,
             focus = function(mr, update)
-                local preview_header = format.preview_header(mr) .. '\n\n'
-                update(preview_header .. 'Loading merge request diff…', 'text')
+                update('Loading merge request diff…', 'text')
                 load_diff(mr, function(content, syntax, load_err)
-                    update(preview_header .. (load_err or content), load_err and 'text' or syntax)
+                    update(load_err or content, load_err and 'text' or syntax)
                 end)
             end,
             cancel = function()
