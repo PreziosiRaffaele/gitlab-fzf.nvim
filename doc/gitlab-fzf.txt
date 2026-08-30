@@ -13,8 +13,9 @@ INTRODUCTION                                              *gitlab-fzf-introducti
 
 GitLab Fzf browses open merge requests for the current repository's GitLab
 project. The fzf-lua picker shows the complete GitLab-provided diff for the
-focused merge request. GitLab Fzf does not change local repository or GitLab
-state.
+focused merge request. Browsing does not change local repository or GitLab
+state. The explicit CTRL-B action checks out a merge request's source branch
+locally; GitLab resources are never changed.
 
 Required: glab and fzf-lua. Optional: delta for colored diff previews.
 Authenticate GitLab requests with GITLAB_TOKEN or `glab auth login`. GitLab Fzf
@@ -49,8 +50,8 @@ smaller window:
 <
 
 GitLab Fzf retains its diff previewer, required selection fields,
-default and CTRL-O actions, and close cleanup. Additional fzf-lua actions, a
-tab-stop override, and a `winopts.on_close` callback are supported.
+default, CTRL-B, and CTRL-O actions, and close cleanup. Additional fzf-lua
+actions, a tab-stop override, and a `winopts.on_close` callback are supported.
 
 ==============================================================================
 :GitLabFzf                                                  *:GitLabFzf*
@@ -67,6 +68,6 @@ diff. Changed areas come from the existing raw diff without another GitLab
 request. Delta formats and colors the diff when available; raw diff syntax is
 the fallback. Delta's formatted file and hunk headers are preserved. Press
 CTRL-O to open the highlighted merge request in GitLab without closing the
-picker. ENTER does not close or replace the picker.
-
-vim:tw=78:ts=8:noet:ft=help:norl:
+picker. Press CTRL-B to close the picker and check out the highlighted merge 
+request's source branch through `glab`. After a successful checkout, GitLab Fzf 
+checks for files changed on disk. 

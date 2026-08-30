@@ -32,6 +32,22 @@ function M.start(ctx)
         ctx.open_url(mr.web_url)
     end
 
+    local function checkout(mr)
+        ctx.transport.checkout_merge_request(mr, function(_, err)
+            if err then
+                ctx.notify(err)
+                return
+            end
+            if ctx.refresh then
+                ctx.refresh()
+            end
+            ctx.notify(
+                string.format('Checked out the source branch for merge request !%s.', tostring(mr.iid)),
+                vim.log.levels.INFO
+            )
+        end)
+    end
+
     local function load_diff(mr, callback)
         cancel_active()
         local cache_key = key(mr)
@@ -102,6 +118,7 @@ function M.start(ctx)
                 cancel_active()
             end,
             open_web = open_web,
+            checkout = checkout,
         })
     end)
 

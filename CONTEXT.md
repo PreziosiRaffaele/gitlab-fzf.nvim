@@ -1,7 +1,8 @@
 # PR Review
 
-This context describes browsing proposed GitLab changes from Neovim without
-performing repository or review mutations.
+This context describes browsing proposed GitLab changes from Neovim and the
+explicit action that checks out a merge request's source branch. Browsing does
+not mutate the repository, and the plugin never mutates GitLab review state.
 
 ## Language
 

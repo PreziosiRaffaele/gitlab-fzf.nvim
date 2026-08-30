@@ -1,7 +1,6 @@
 # GitLab Fzf Specification
 
 ## Purpose and scope
-
 `gitlab-fzf.nvim` provides read-only browsing of open merge requests belonging
 to the GitLab project associated with the current repository. One `fzf-lua`
 picker lists merge requests and shows a compact merge request summary followed
@@ -51,9 +50,9 @@ before the entry is assembled. Draft state is omitted from picker rows.
 
 GitLab Fzf forwards resolved `fzf_lua` settings to the picker invocation. Users
 may customize presentation and add actions. GitLab Fzf retains its diff
-previewer, encoded selection field, visible line format, default and `Ctrl-O`
-actions, and cancellation on close. A configured `winopts.on_close` callback
-runs after GitLab Fzf cleanup.
+previewer, encoded selection field, visible line format, default, `Ctrl-B`, and
+`Ctrl-O` actions, and cancellation on close. A configured `winopts.on_close`
+callback runs after GitLab Fzf cleanup.
 
 Focusing an entry asynchronously runs
 `glab mr diff <iid> --raw --color=never`. The preview immediately shows a
@@ -86,14 +85,23 @@ active GitLab or Delta process. Successful previews are reused. A failed GitLab
 diff request replaces the loading message and is retried when the entry is
 focused again. Closing GitLab Fzf cancels active work and ignores late callbacks.
 
-There is no second picker and no local revision preparation. Enter is a
-non-closing no-op because focus drives the browsing experience. The picker
-closes through its normal cancel action.
+There is no second picker. Enter is a non-closing no-op because focus drives the
+browsing experience. The picker closes through its normal cancel action or a
+source-branch checkout.
 
 Pressing `Ctrl-O` opens the highlighted merge request's HTTP(S) `web_url`
 through `vim.ui.open()`. The labeled action runs without closing or restarting
 the picker and does not send another GitLab request. A missing or invalid URL
 and a system-handler failure produce concise errors without closing the picker.
+
+Pressing `Ctrl-B` closes the picker and asynchronously runs
+`glab mr checkout <iid>` for the highlighted merge request. Delegating checkout
+to `glab` supports source branches in both the current project and forks. A
+successful checkout runs `:checktime` so unmodified buffers notice files
+changed on disk, then displays an informational notification. A failure
+displays a sanitized error and does not run `:checktime`. The IID is validated
+before the process starts. Checkout may update the working tree, `HEAD`, and
+local Git refs, but does not mutate GitLab resources.
 
 The browsing flow depends only on `pick_merge_request(items, handlers)`. The
 GitLab transport exposes `list_merge_requests(callback)` and
@@ -106,18 +114,3 @@ Errors are concise and actionable for missing dependencies, repositories and
 remotes, authentication, permissions, transport failures (including a concise
 502 Bad Gateway message), malformed JSON, and empty results. Error content is
 sanitized before display.
-
-## Testing
-
-Tests cover renamed command registration; configuration defaults, overrides,
-validation and forwarding; construction of the custom previewer against the
-pinned real fzf-lua dependency; entry formatting and header, git-log ANSI field
-colors, author fallbacks, tab-stop overrides, complete multibyte titles and
-remote value sanitization; GitLab normalization and pagination; raw-diff
-command construction; identifier validation; Delta rendering and fallback;
-summary metadata, description truncation, Git-quoted paths, changed-area
-grouping, and summary visibility across preview states; friendly preview update
-metadata; lazy loading; caching; retry; cancellation and stale callbacks; the
-single-picker lifecycle; non-closing actions; URL-handler errors; deferred
-dependency checks; and error sanitization. Tests require no network,
-credentials, or external executables.

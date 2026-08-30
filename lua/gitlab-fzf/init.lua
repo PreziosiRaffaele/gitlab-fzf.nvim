@@ -25,6 +25,10 @@ local function open_url(url)
     end
 end
 
+local function refresh_buffers()
+    vim.cmd('checktime')
+end
+
 local function dependency_error()
     if vim.fn.executable('glab') ~= 1 then
         return 'GitLab Fzf requires `glab`. Install it, then authenticate with `glab auth login` or GITLAB_TOKEN.'
@@ -57,6 +61,7 @@ function M.open()
         picker = picker,
         notify = notify,
         open_url = overrides.open_url or open_url,
+        refresh = overrides.refresh or refresh_buffers,
     })
 end
 

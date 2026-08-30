@@ -76,6 +76,23 @@ T['retrieves the raw merge request diff'] = function()
     eq(result, { 'diff --git a/x b/x\n', nil })
 end
 
+T['checks out the merge request source branch'] = function()
+    local argv, opts, result
+    local transport = gitlab.new({
+        runner = function(value, options, callback)
+            argv, opts = value, options
+            callback({ code = 0, stdout = "Switched to branch 'feature'\n" })
+            return { cancel = function() end }
+        end,
+    })
+    transport.checkout_merge_request({ iid = 7 }, function(value, err)
+        result = { value, err }
+    end)
+    eq(argv, { 'glab', 'mr', 'checkout', '7' })
+    eq(opts, { text = true })
+    eq(result, { "Switched to branch 'feature'\n", nil })
+end
+
 T['rejects an invalid merge request identifier before running glab'] = function()
     local called, err
     local transport = gitlab.new({
@@ -101,6 +118,33 @@ T['reports and sanitizes raw diff failures'] = function()
         err = value
     end)
     eq(err, 'GitLab request failed: request https://example.com failed token=[REDACTED]')
+end
+
+T['reports and sanitizes checkout failures'] = function()
+    local err
+    local transport = gitlab.new({
+        runner = function(_, _, callback)
+            callback({ code = 1, stderr = 'request https://secret@example.com failed token=abc' })
+        end,
+    })
+    transport.checkout_merge_request({ iid = 7 }, function(_, value)
+        err = value
+    end)
+    eq(err, 'Unable to check out merge request: request https://example.com failed token=[REDACTED]')
+end
+
+T['rejects an invalid checkout identifier before running glab'] = function()
+    local called, err
+    local transport = gitlab.new({
+        runner = function()
+            called = true
+        end,
+    })
+    transport.checkout_merge_request({ iid = '--help' }, function(_, value)
+        err = value
+    end)
+    eq(called, nil)
+    eq(err, 'GitLab returned an invalid merge request identifier.')
 end
 
 T['reports gateway failures without exposing the HTML response'] = function()
