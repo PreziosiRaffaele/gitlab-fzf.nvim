@@ -1,5 +1,5 @@
-local browse = require('prview.browse')
-local format = require('prview.format')
+local browse = require('gitlab-fzf.browse')
+local format = require('gitlab-fzf.format')
 local eq = MiniTest.expect.equality
 local T = MiniTest.new_set()
 

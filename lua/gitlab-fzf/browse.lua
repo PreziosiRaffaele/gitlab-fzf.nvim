@@ -1,4 +1,4 @@
-local format = require('prview.format')
+local format = require('gitlab-fzf.format')
 
 local M = {}
 

@@ -1,12 +1,12 @@
 local M = {}
 
-local config = require('prview.config')
+local config = require('gitlab-fzf.config')
 local overrides = {}
 local options = config.resolve()
 local active
 
 local function notify(message, level)
-    vim.notify(message, level or vim.log.levels.ERROR, { title = 'PRView' })
+    vim.notify(message, level or vim.log.levels.ERROR, { title = 'GitLab Fzf' })
 end
 
 local function system_open(url, opener)
@@ -27,11 +27,11 @@ end
 
 local function dependency_error()
     if vim.fn.executable('glab') ~= 1 then
-        return 'PRView requires `glab`. Install it, then authenticate with `glab auth login` or GITLAB_TOKEN.'
+        return 'GitLab Fzf requires `glab`. Install it, then authenticate with `glab auth login` or GITLAB_TOKEN.'
     end
     local ok = pcall(require, 'fzf-lua')
     if not ok then
-        return 'PRView requires `fzf-lua`. Install and load fzf-lua before running :PRView.'
+        return 'GitLab Fzf requires `fzf-lua`. Install and load fzf-lua before running :GitLabFzf.'
     end
 end
 
@@ -46,10 +46,10 @@ function M.open()
         return
     end
 
-    local transport = overrides.transport or require('prview.gitlab').new()
-    local renderer = overrides.renderer or require('prview.preview').new()
-    local picker = overrides.picker or require('prview.picker.fzf').new(options.fzf_lua)
-    active = require('prview.browse').start({
+    local transport = overrides.transport or require('gitlab-fzf.gitlab').new()
+    local renderer = overrides.renderer or require('gitlab-fzf.preview').new()
+    local picker = overrides.picker or require('gitlab-fzf.picker.fzf').new(options.fzf_lua)
+    active = require('gitlab-fzf.browse').start({
         transport = transport,
         renderer = renderer,
         picker = picker,
@@ -61,8 +61,8 @@ end
 function M.setup(opts)
     options = config.resolve(opts)
     overrides = opts and opts._test or {}
-    pcall(vim.api.nvim_del_user_command, 'PRView')
-    vim.api.nvim_create_user_command('PRView', M.open, {
+    pcall(vim.api.nvim_del_user_command, 'GitLabFzf')
+    vim.api.nvim_create_user_command('GitLabFzf', M.open, {
         desc = 'Browse GitLab merge requests',
     })
 end

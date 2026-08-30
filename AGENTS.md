@@ -3,7 +3,7 @@
 ## Structure
 
 - `plugin/`: minimal Neovim startup shim only.
-- `lua/nvim-plugin-template/`: implementation, organized by responsibility.
+- `lua/gitlab-fzf/`: implementation, organized by responsibility.
 - `doc/`: Vim help. Keep help tags and examples aligned with the public API.
 - `tests/`: headless `mini.test` suite.
 
@@ -15,10 +15,10 @@
   utility modules without a real cross-cutting responsibility.
 - Preserve user buffers, windows, options, and mappings unless the plugin
   explicitly owns them.
-- Keep configuration defaults in `lua/nvim-plugin-template/config.lua` and
+- Keep configuration defaults in `lua/gitlab-fzf/config.lua` and
   validate externally supplied values there.
 - When changing a public command, option, or mapping, update both `README.md`
-  and `doc/nvim-plugin-template.txt`.
+  and `doc/gitlab-fzf.txt`.
 
 ## Specification Workflow
 
@@ -38,5 +38,5 @@ For every feature, follow this sequence:
 ## Verification
 
 Run `make quality` after editing Lua files. Run `make test` for behavior
-changes, or `make check` for both. The test dependency is pinned in the
+changes, or `make check` for both. Test dependencies are pinned in the
 `Makefile`; do not upgrade it incidentally.

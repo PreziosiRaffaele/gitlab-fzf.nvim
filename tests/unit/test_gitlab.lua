@@ -1,4 +1,4 @@
-local gitlab = require('prview.gitlab')
+local gitlab = require('gitlab-fzf.gitlab')
 local eq = MiniTest.expect.equality
 local T = MiniTest.new_set()
 

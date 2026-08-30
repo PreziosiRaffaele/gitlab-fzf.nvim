@@ -9,7 +9,7 @@ local defaults = {
 }
 
 local function invalid(message)
-    error('PRView setup: ' .. message, 3)
+    error('GitLab Fzf setup: ' .. message, 3)
 end
 
 local function validate_fzf_lua(opts)

@@ -1,0 +1,68 @@
+*gitlab-fzf.txt*                      Browse GitLab merge requests from Neovim
+
+==============================================================================
+CONTENTS                                                        *gitlab-fzf-contents*
+
+1. Introduction                                              |gitlab-fzf-introduction|
+2. Setup                                                            |gitlab-fzf-setup|
+3. Configuration                                          |gitlab-fzf-configuration|
+4. Command                                                    |:GitLabFzf|
+
+==============================================================================
+INTRODUCTION                                              *gitlab-fzf-introduction*
+
+GitLab Fzf browses open merge requests for the current repository's GitLab
+project. The fzf-lua picker shows the complete GitLab-provided diff for the
+focused merge request. GitLab Fzf does not change local repository or GitLab
+state.
+
+Required: glab and fzf-lua. Optional: delta for colored diff previews.
+Authenticate GitLab requests with GITLAB_TOKEN or `glab auth login`. GitLab Fzf
+does not handle tokens itself.
+
+==============================================================================
+SETUP                                                            *gitlab-fzf-setup*
+
+>lua
+    require('gitlab-fzf').setup()
+<
+
+Setup is idempotent. Dependency checks and external processes are deferred
+until the command is invoked.
+
+==============================================================================
+CONFIGURATION                                      *gitlab-fzf-configuration*
+
+The picker opens fullscreen by default. Pass per-picker fzf-lua options under
+`fzf_lua`; nested values override GitLab Fzf's defaults. For example, to use a
+smaller window:
+
+>lua
+    require('gitlab-fzf').setup({
+        fzf_lua = {
+            winopts = {
+                fullscreen = false,
+                width = 0.9,
+            },
+        },
+    })
+<
+
+GitLab Fzf retains its diff previewer, required selection fields,
+default and CTRL-O actions, and close cleanup. Additional fzf-lua actions, a
+tab-stop override, and a `winopts.on_close` callback are supported.
+
+==============================================================================
+:GitLabFzf                                                  *:GitLabFzf*
+
+Opens the open merge request picker. Highlight a merge request to preview its
+complete, scrollable GitLab diff. Each entry shows its IID, latest-update time,
+full title, and author as `!IID (updated) title <@author>`, colored like fzf-lua
+git commits, under the `MR Number (Last Updated Time) Title <Author>` header.
+Recent updates appear as relative time; older updates appear as a calendar
+date. The preview shows the diff. Delta formats and colors the diff when
+available; raw diff syntax is the fallback. Delta's formatted file and hunk
+headers are preserved. Press CTRL-O to open the highlighted merge request in
+GitLab without closing the picker. ENTER does not close or replace the picker.
+
+vim:tw=78:ts=8:noet:ft=help:norl:

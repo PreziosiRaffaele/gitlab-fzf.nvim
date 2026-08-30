@@ -1,17 +1,27 @@
-local prview = require('prview')
+local gitlab_fzf = require('gitlab-fzf')
 local eq = MiniTest.expect.equality
 local T = MiniTest.new_set()
 
+T['registers the renamed command idempotently'] = function()
+    gitlab_fzf.setup()
+    gitlab_fzf.setup()
+
+    local command = vim.api.nvim_get_commands({})['GitLabFzf']
+    eq(type(command), 'table')
+    eq(type(command.callback), 'function')
+    eq(command.definition, 'Browse GitLab merge requests')
+end
+
 T['opens URLs with Neovim system handlers and reports adapter errors'] = function()
     local opened
-    local err = prview._system_open('https://gitlab.example.com/group/project/-/merge_requests/2', function(url)
+    local err = gitlab_fzf._system_open('https://gitlab.example.com/group/project/-/merge_requests/2', function(url)
         opened = url
         return {}
     end)
     eq(err, nil)
     eq(opened, 'https://gitlab.example.com/group/project/-/merge_requests/2')
 
-    err = prview._system_open('https://gitlab.example.com', function()
+    err = gitlab_fzf._system_open('https://gitlab.example.com', function()
         return nil, 'no handler'
     end)
     eq(err, 'no handler')
@@ -26,7 +36,7 @@ T['does not require the git executable'] = function()
         return name == 'glab' and 1 or 0
     end
     package.loaded['fzf-lua'] = {}
-    prview.setup({
+    gitlab_fzf.setup({
         _test = {
             transport = {
                 list_merge_requests = function(callback)
@@ -49,7 +59,7 @@ T['does not require the git executable'] = function()
             },
         },
     })
-    prview.open()
+    gitlab_fzf.open()
     vim.fn.executable = previous_executable
     package.loaded['fzf-lua'] = previous_fzf
     eq(checked, { 'glab' })
@@ -58,8 +68,8 @@ end
 
 T['passes setup fzf-lua settings to the picker'] = function()
     local received, picked
-    local previous_picker = package.loaded['prview.picker.fzf']
-    package.loaded['prview.picker.fzf'] = {
+    local previous_picker = package.loaded['gitlab-fzf.picker.fzf']
+    package.loaded['gitlab-fzf.picker.fzf'] = {
         new = function(opts)
             received = opts
             return {
@@ -69,7 +79,7 @@ T['passes setup fzf-lua settings to the picker'] = function()
             }
         end,
     }
-    prview.setup({
+    gitlab_fzf.setup({
         fzf_lua = {
             prompt = 'Reviews> ',
             winopts = { fullscreen = false },
@@ -92,8 +102,8 @@ T['passes setup fzf-lua settings to the picker'] = function()
             renderer = {},
         },
     })
-    prview.open()
-    package.loaded['prview.picker.fzf'] = previous_picker
+    gitlab_fzf.open()
+    package.loaded['gitlab-fzf.picker.fzf'] = previous_picker
 
     eq(received, {
         prompt = 'Reviews> ',

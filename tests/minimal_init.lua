@@ -6,6 +6,7 @@ end
 local root = plugin_root()
 vim.opt.rtp:prepend(root)
 vim.opt.rtp:prepend(root .. '/deps/mini.nvim')
+vim.opt.rtp:prepend(root .. '/deps/fzf-lua')
 vim.o.swapfile = false
 vim.o.shadafile = 'NONE'
 

@@ -1,6 +1,6 @@
-:PRView	prview.txt	/*:PRView*
-prview-configuration	prview.txt	/*prview-configuration*
-prview-contents	prview.txt	/*prview-contents*
-prview-introduction	prview.txt	/*prview-introduction*
-prview-setup	prview.txt	/*prview-setup*
-prview.txt	prview.txt	/*prview.txt*
+:GitLabFzf	gitlab-fzf.txt	/*:GitLabFzf*
+gitlab-fzf-configuration	gitlab-fzf.txt	/*gitlab-fzf-configuration*
+gitlab-fzf-contents	gitlab-fzf.txt	/*gitlab-fzf-contents*
+gitlab-fzf-introduction	gitlab-fzf.txt	/*gitlab-fzf-introduction*
+gitlab-fzf-setup	gitlab-fzf.txt	/*gitlab-fzf-setup*
+gitlab-fzf.txt	gitlab-fzf.txt	/*gitlab-fzf.txt*

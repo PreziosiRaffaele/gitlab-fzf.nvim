@@ -1,4 +1,4 @@
-local config = require('prview.config')
+local config = require('gitlab-fzf.config')
 local eq = MiniTest.expect.equality
 local expect_error = MiniTest.expect.error
 local T = MiniTest.new_set()

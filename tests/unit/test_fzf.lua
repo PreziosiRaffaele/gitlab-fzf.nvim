@@ -1,4 +1,4 @@
-local picker = require('prview.picker.fzf')
+local picker = require('gitlab-fzf.picker.fzf')
 local eq = MiniTest.expect.equality
 local T = MiniTest.new_set()
 
@@ -20,7 +20,7 @@ local function capture_picker(handlers, opts)
     return captured
 end
 
-T['forwards configured options while retaining PRView behavior'] = function()
+T['forwards configured options while retaining GitLab Fzf behavior'] = function()
     local cancelled, closed = false, false
     local custom_action = function() end
     local configured = {
@@ -79,6 +79,18 @@ T['passes item rows with a format header and retains hidden selection indexes'] 
     eq(strip_ansi(captured.fzf_opts['--header']), 'MR Number (Last Updated Time) Title <Author>')
 end
 
+T['constructs the custom previewer against the pinned fzf-lua dependency'] = function()
+    local captured = capture_picker({
+        focus = function() end,
+    })
+    local previewer = captured.previewer._ctor()
+
+    eq(type(require('fzf-lua.previewer.builtin').base), 'table')
+    eq(type(previewer), 'table')
+    eq(type(previewer.new), 'function')
+    eq(type(previewer.populate_preview_buf), 'function')
+end
+
 T['opens fullscreen and keeps enter on the single picker'] = function()
     local cancelled
     local captured = capture_picker({
@@ -89,7 +101,7 @@ T['opens fullscreen and keeps enter on the single picker'] = function()
         cancel = function()
             cancelled = true
         end,
-    }, require('prview.config').resolve().fzf_lua)
+    }, require('gitlab-fzf.config').resolve().fzf_lua)
     eq(captured.winopts.fullscreen, true)
     eq(type(captured.actions.default.fn), 'function')
     eq(captured.actions.default.exec_silent, true)

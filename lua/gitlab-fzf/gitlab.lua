@@ -36,7 +36,7 @@ local function error_for(result)
     elseif lower:find('auth') or lower:find('401') then
         return 'GitLab authentication failed. Set GITLAB_TOKEN or run `glab auth login` for this repository host.'
     elseif lower:find('not a git repository') then
-        return 'PRView must be run inside a Git repository.'
+        return 'GitLab Fzf must be run inside a Git repository.'
     elseif lower:find('remote') or lower:find('hostname') then
         return 'No GitLab remote recognized by glab for this repository. Check the remote and `glab auth status`.'
     end

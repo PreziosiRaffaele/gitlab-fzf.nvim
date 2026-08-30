@@ -28,8 +28,14 @@ jobs:
         run: make quality
 
   test:
-    name: Test
+    name: Test (Neovim ${{ matrix.neovim }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        neovim:
+          - v0.10.4
+          - stable
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -38,7 +44,7 @@ jobs:
         uses: rhysd/action-setup-vim@v1
         with:
           neovim: true
-          version: stable
+          version: ${{ matrix.neovim }}
 
       - name: Run tests
         run: make test

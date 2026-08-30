@@ -1,7 +1,7 @@
-# prview.nvim
+# gitlab-fzf.nvim
 
 Browse open GitLab merge requests and inspect each full diff in a single
-fzf-lua picker. PRView does not change local repository or GitLab state.
+fzf-lua picker. GitLab Fzf does not change local repository or GitLab state.
 
 ## Requirements
 
@@ -19,7 +19,7 @@ With lazy.nvim:
 
 ```lua
 {
-  'prview.nvim',
+  'PreziosiRaffaele/gitlab-fzf.nvim',
   dependencies = { 'ibhagwan/fzf-lua' },
   opts = {},
 }
@@ -28,10 +28,10 @@ With lazy.nvim:
 ## Configuration
 
 The picker opens fullscreen by default. Pass per-picker fzf-lua options through
-`fzf_lua`; nested values override PRView's defaults:
+`fzf_lua`; nested values override GitLab Fzf's defaults:
 
 ```lua
-require('prview').setup({
+require('gitlab-fzf').setup({
   fzf_lua = {
     prompt = 'Reviews> ',
     winopts = {
@@ -44,14 +44,15 @@ require('prview').setup({
 
 ## Usage
 
-Run `:PRView` and highlight an open merge request to load its complete,
-scrollable GitLab diff in the preview. Each entry shows the merge request IID, relative latest-update time, title, and
-author as `!IID (updated) title <@author>`, colored like fzf-lua git commits,
-under the `MR Number (Last Updated Time) Title <Author>` header. The
-preview shows the diff. Delta formats and colors the diff when installed; raw
-diff syntax is the fallback. Press `Ctrl-O` to open the highlighted merge
-request in GitLab without closing the picker. No external process or dependency
-check runs during startup.
+Run `:GitLabFzf` and highlight an open merge request to load its complete,
+scrollable GitLab diff in the preview. Each entry shows the merge request IID,
+relative latest-update time, title, and author as
+`!IID (updated) title <@author>`, colored like fzf-lua git commits, under the
+`MR Number (Last Updated Time) Title <Author>` header. The preview shows the
+diff. Delta formats and colors the diff when installed; raw diff syntax is the
+fallback. Press `Ctrl-O` to open the highlighted merge request in GitLab
+without closing the picker. No external process or dependency check runs
+during startup.
 
 ## Development
 
