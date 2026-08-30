@@ -4,9 +4,10 @@
 
 `gitlab-fzf.nvim` provides read-only browsing of open merge requests belonging
 to the GitLab project associated with the current repository. One `fzf-lua`
-picker lists merge requests and shows the complete raw diff returned by GitLab
-for the focused entry. GitLab Fzf does not mutate user buffers, the working
-tree, the index, `HEAD`, Git refs, or GitLab resources.
+picker lists merge requests and shows a compact merge request summary followed
+by the complete raw diff returned by GitLab for the focused entry. GitLab Fzf
+does not mutate user buffers, the working tree, the index, `HEAD`, Git refs, or
+GitLab resources.
 
 ## Public API
 
@@ -37,6 +38,9 @@ tab-delimited from the visible line; fzf expands tabs with a tab stop of four
 by default, and users may override the tab stop through `fzf_lua.fzf_opts`.
 The request uses glab's `:fullpath` placeholder so nested project paths are
 requested directly without a preliminary project-ID lookup.
+The normalized merge request retains the description, reviewers, labels, and
+detailed merge status used by the preview summary in addition to the fields
+used by the picker and actions.
 GitLab Fzf performs no manual column padding or truncation. It wraps the IID in
 yellow, the parenthesized update time in green, and the angle-bracketed author
 in blue, matching fzf-lua's git commit picker, and enables fzf `--ansi` so those
@@ -52,11 +56,23 @@ actions, and cancellation on close. A configured `winopts.on_close` callback
 runs after GitLab Fzf cleanup.
 
 Focusing an entry asynchronously runs
-`glab mr diff <iid> --raw --color=never`. The preview first shows a loading
-message, then the complete scrollable raw diff returned by GitLab. A plain-text
-header above loading, error, and diff content shows the raw diff state only.
-GitLab's own merge request diff limits still apply.
-Empty output produces a concise no-textual-changes message.
+`glab mr diff <iid> --raw --color=never`. The preview immediately shows a
+plain-text summary containing the merge request IID and title; author and
+source-to-target branch; draft or detailed merge status; latest update time;
+and reviewers, labels, and the first non-empty description paragraph when
+present. Remote values are collapsed to single-line text. Description excerpts
+longer than 240 characters are truncated with an ellipsis.
+
+The summary appears above a `Diff` heading and the loading, error, or final diff
+body. After the raw diff arrives, the summary includes changed areas derived
+from its `diff --git` headers. Each unique changed file contributes once and a
+rename uses its new path. Files are grouped by their first path segment, with
+repository-root files grouped under `[root]`; the root group appears first and
+other groups are sorted alphabetically. Git-quoted paths are decoded. No extra
+process or network request is made for this list. If no paths can be extracted,
+the changed-area section is omitted. GitLab's own merge request diff limits
+therefore apply to both the diff and changed areas. Empty output produces a
+concise no-textual-changes message.
 
 When Delta is executable, GitLab Fzf passes the raw diff to
 `delta --paging=never` and displays its fully formatted ANSI output, including
@@ -82,7 +98,8 @@ and a system-handler failure produce concise errors without closing the picker.
 The browsing flow depends only on `pick_merge_request(items, handlers)`. The
 GitLab transport exposes `list_merge_requests(callback)` and
 `get_merge_request_diff(mr, callback)`. Diff rendering exposes
-`render(diff, callback)`. Tests inject fake picker, transport, renderer, process,
+`render(diff, callback)`, and summary rendering exposes `render(mr, diff)`.
+Tests inject fake picker, transport, diff renderer, summary renderer, process,
 and URL-opening adapters.
 
 Errors are concise and actionable for missing dependencies, repositories and
@@ -98,7 +115,9 @@ pinned real fzf-lua dependency; entry formatting and header, git-log ANSI field
 colors, author fallbacks, tab-stop overrides, complete multibyte titles and
 remote value sanitization; GitLab normalization and pagination; raw-diff
 command construction; identifier validation; Delta rendering and fallback;
-friendly preview update metadata; lazy loading; caching; retry; cancellation
-and stale callbacks; the single-picker lifecycle; non-closing actions;
-URL-handler errors; deferred dependency checks; and error sanitization. Tests
-require no network, credentials, or external executables.
+summary metadata, description truncation, Git-quoted paths, changed-area
+grouping, and summary visibility across preview states; friendly preview update
+metadata; lazy loading; caching; retry; cancellation and stale callbacks; the
+single-picker lifecycle; non-closing actions; URL-handler errors; deferred
+dependency checks; and error sanitization. Tests require no network,
+credentials, or external executables.

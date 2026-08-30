@@ -6,6 +6,11 @@ function M.start(ctx)
     local generation, active = 0, nil
     local cache = {}
     local closed = false
+    local summary = ctx.summary or require('gitlab-fzf.summary')
+
+    local function preview_content(mr, body, diff)
+        return table.concat({ summary.render(mr, diff), '', 'Diff', body or '' }, '\n')
+    end
 
     local function key(mr)
         return tostring(mr.project_id) .. ':' .. tostring(mr.iid)
@@ -32,7 +37,7 @@ function M.start(ctx)
         local cache_key = key(mr)
         local cached = cache[cache_key]
         if cached and not cached.err then
-            callback(cached.content, cached.syntax, nil)
+            callback(cached.content, cached.syntax, nil, cached.diff)
             return
         end
 
@@ -59,8 +64,8 @@ function M.start(ctx)
                     return
                 end
                 active = nil
-                cache[cache_key] = { content = content, syntax = syntax }
-                callback(content, syntax, nil)
+                cache[cache_key] = { content = content, syntax = syntax, diff = diff }
+                callback(content, syntax, nil, diff)
             end)
             if not render_completed then
                 active = render
@@ -87,9 +92,9 @@ function M.start(ctx)
         ctx.picker.pick_merge_request(items, {
             format = format.merge_request,
             focus = function(mr, update)
-                update('Loading merge request diff…', 'text')
-                load_diff(mr, function(content, syntax, load_err)
-                    update(load_err or content, load_err and 'text' or syntax)
+                update(preview_content(mr, 'Loading merge request diff…'), 'text')
+                load_diff(mr, function(content, syntax, load_err, diff)
+                    update(preview_content(mr, load_err or content, diff), load_err and 'text' or syntax)
                 end)
             end,
             cancel = function()

@@ -49,10 +49,13 @@ scrollable GitLab diff in the preview. Each entry shows the merge request IID,
 relative latest-update time, title, and author as
 `!IID (updated) title <@author>`, colored like fzf-lua git commits, under the
 `MR Number (Last Updated Time) Title <Author>` header. The preview shows the
-diff. Delta formats and colors the diff when installed; raw diff syntax is the
-fallback. Press `Ctrl-O` to open the highlighted merge request in GitLab
-without closing the picker. No external process or dependency check runs
-during startup.
+merge request title, branches, status, reviewers, labels, and first description
+paragraph, followed by changed-file counts grouped by top-level repository
+area and then the diff. The changed-area list is derived from the existing raw
+diff without another GitLab request. Delta formats and colors the diff when
+installed; raw diff syntax is the fallback. Press `Ctrl-O` to open the
+highlighted merge request in GitLab without closing the picker. No external
+process or dependency check runs during startup.
 
 ## Development
 

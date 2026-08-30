@@ -48,10 +48,12 @@ function M.open()
 
     local transport = overrides.transport or require('gitlab-fzf.gitlab').new()
     local renderer = overrides.renderer or require('gitlab-fzf.preview').new()
+    local summary = overrides.summary or require('gitlab-fzf.summary')
     local picker = overrides.picker or require('gitlab-fzf.picker.fzf').new(options.fzf_lua)
     active = require('gitlab-fzf.browse').start({
         transport = transport,
         renderer = renderer,
+        summary = summary,
         picker = picker,
         notify = notify,
         open_url = overrides.open_url or open_url,

@@ -75,11 +75,15 @@ local function normalize_mr(raw)
         project_id = raw.project_id or raw.target_project_id,
         iid = raw.iid,
         title = nullable(raw.title) or '',
+        description = nullable(raw.description) or '',
         author = nullable(raw.author),
+        reviewers = type(raw.reviewers) == 'table' and raw.reviewers or {},
+        labels = type(raw.labels) == 'table' and raw.labels or {},
         source_branch = nullable(raw.source_branch) or '',
         target_branch = nullable(raw.target_branch) or '',
         updated_at = nullable(raw.updated_at),
         draft = raw.draft == true or raw.work_in_progress == true,
+        detailed_merge_status = nullable(raw.detailed_merge_status),
         web_url = nullable(raw.web_url),
     }
 end
