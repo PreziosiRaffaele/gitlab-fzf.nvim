@@ -1,6 +1,8 @@
 local M = {}
 
+local config = require('prview.config')
 local overrides = {}
+local options = config.resolve()
 local active
 
 local function notify(message, level)
@@ -46,7 +48,7 @@ function M.open()
 
     local transport = overrides.transport or require('prview.gitlab').new()
     local renderer = overrides.renderer or require('prview.preview').new()
-    local picker = overrides.picker or require('prview.picker.fzf')
+    local picker = overrides.picker or require('prview.picker.fzf').new(options.fzf_lua)
     active = require('prview.browse').start({
         transport = transport,
         renderer = renderer,
@@ -57,7 +59,7 @@ function M.open()
 end
 
 function M.setup(opts)
-    -- Options are intentionally private test seams, not user configuration.
+    options = config.resolve(opts)
     overrides = opts and opts._test or {}
     pcall(vim.api.nvim_del_user_command, 'PRView')
     vim.api.nvim_create_user_command('PRView', M.open, {

@@ -46,7 +46,7 @@ T['lists every page of open merge requests'] = function()
         '--paginate',
         '--output',
         'ndjson',
-        'projects/:id/merge_requests?state=opened&order_by=updated_at&sort=desc&per_page=100',
+        'projects/:fullpath/merge_requests?state=opened&order_by=updated_at&sort=desc&per_page=100',
     })
     eq({ result[1].iid, result[2].iid }, { 1, 2 })
 end
@@ -93,6 +93,22 @@ T['reports and sanitizes raw diff failures'] = function()
         err = value
     end)
     eq(err, 'GitLab request failed: request https://example.com failed token=[REDACTED]')
+end
+
+T['reports gateway failures without exposing the HTML response'] = function()
+    local err
+    local transport = gitlab.new({
+        runner = function(_, _, callback)
+            callback({
+                code = 1,
+                stderr = '502 failed to parse unknown error format: <html><title>502 Bad Gateway</title></html>',
+            })
+        end,
+    })
+    transport.get_merge_request_diff({ iid = 7 }, function(_, value)
+        err = value
+    end)
+    eq(err, 'GitLab gateway returned 502 Bad Gateway. Check the GitLab host or reverse proxy and retry.')
 end
 
 T['rejects malformed paginated JSON'] = function()

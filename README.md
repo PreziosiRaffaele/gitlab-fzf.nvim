@@ -25,13 +25,32 @@ With lazy.nvim:
 }
 ```
 
+## Configuration
+
+The picker opens fullscreen by default. Pass per-picker fzf-lua options through
+`fzf_lua`; nested values override PRView's defaults:
+
+```lua
+require('prview').setup({
+  fzf_lua = {
+    prompt = 'Reviews> ',
+    winopts = {
+      fullscreen = false,
+      width = 0.9,
+    },
+  },
+})
+```
+
 ## Usage
 
 Run `:PRView` and highlight an open merge request to load its complete,
-scrollable GitLab diff in the preview. Delta colors the diff when installed;
-raw diff syntax is the fallback. Press `Ctrl-O` to open the highlighted merge
-request in GitLab without closing the picker. No external process or dependency
-check runs during startup.
+scrollable GitLab diff in the preview. Native fzf tab stops align the merge
+request IID, author, and title without a column header; the preview shows the
+complete state, branch, and update metadata above the diff. Delta formats and
+colors the diff when installed; raw diff syntax is the fallback. Press
+`Ctrl-O` to open the highlighted merge request in GitLab without closing the
+picker. No external process or dependency check runs during startup.
 
 ## Development
 

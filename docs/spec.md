@@ -10,8 +10,13 @@ the index, `HEAD`, Git refs, or GitLab resources.
 
 ## Public API
 
-Call `require('prview').setup()` without feature-specific options. Setup is
-idempotent and registers `:PRView`. The startup shim calls it automatically.
+Call `require('prview').setup(opts)`. Setup is idempotent, registers `:PRView`,
+and accepts an optional `fzf_lua` table containing per-picker fzf-lua options.
+Its default is `{ winopts = { fullscreen = true } }`. User values are
+deep-merged over that default; setting `winopts.fullscreen = false` restores a
+non-fullscreen picker. Each setup call replaces prior settings. Invalid types
+and unknown top-level PRView options produce clear errors. The startup shim
+calls setup with defaults automatically.
 
 ## Dependencies and authentication
 
@@ -24,18 +29,37 @@ startup.
 ## Behavior
 
 `:PRView` asynchronously requests every page of open merge requests through
-`glab api`, ordered by most recent update. Entries show the merge request IID,
-draft status, title, author, source and target branches, and update time.
+`glab api`, ordered by most recent update. Each raw picker entry contains a
+hidden numeric selection index followed by tab-delimited IID, author, and full
+title fields. PRView adds no column header. fzf expands the tabs with a tab stop
+of four by default; users may override the tab stop through `fzf_lua.fzf_opts`.
+The request uses glab's `:fullpath` placeholder so nested project paths are
+requested directly without a preliminary project-ID lookup.
+PRView performs no manual column padding, truncation, or per-field ANSI styling,
+leaving entry rendering and theme colors to fzf-lua and fzf. The visible IID,
+author, and title are searchable. Control characters in GitLab-provided display
+fields are replaced with spaces before the entry is assembled. Draft state is
+omitted from picker rows.
+
+PRView forwards resolved `fzf_lua` settings to the picker invocation. Users may
+customize presentation and add actions. PRView retains its diff previewer,
+encoded selection field, tab-delimited visible fields, default and `Ctrl-O`
+actions, and cancellation on close. A configured `winopts.on_close` callback
+runs after PRView cleanup.
 
 Focusing an entry asynchronously runs
 `glab mr diff <iid> --raw --color=never`. The preview first shows a loading
-message, then the complete scrollable raw diff returned by GitLab. GitLab's own
-merge request diff limits still apply. Empty output produces a concise
+message, then the complete scrollable raw diff returned by GitLab. A plain-text
+header above loading, error, and diff content repeats the draft state, full
+title, author, complete branch route, and exact update time. GitLab's own merge
+request diff limits still apply. Empty output produces a concise
 no-textual-changes message.
 
 When Delta is executable, PRView passes the raw diff to
-`delta --paging=never --color-only` and displays its ANSI output. If Delta is
-missing or fails, PRView displays the raw content with Neovim's `diff` syntax.
+`delta --paging=never` and displays its fully formatted ANSI output, including
+Delta's file and hunk headers. Delta reads the user's existing configuration.
+If Delta is missing or fails, PRView displays the raw content with Neovim's
+`diff` syntax.
 
 Diff loading and rendering are lazy, cancellable, protected from stale
 callbacks, and cached per project and merge request. Moving focus cancels the
@@ -59,13 +83,17 @@ GitLab transport exposes `list_merge_requests(callback)` and
 and URL-opening adapters.
 
 Errors are concise and actionable for missing dependencies, repositories and
-remotes, authentication, permissions, transport failures, malformed JSON, and
-empty results. Error content is sanitized before display.
+remotes, authentication, permissions, transport failures (including a concise
+502 Bad Gateway message), malformed JSON, and empty results. Error content is
+sanitized before display.
 
 ## Testing
 
-Tests cover GitLab normalization and pagination, raw-diff command construction,
-identifier validation, Delta rendering and fallback, lazy loading, caching,
-retry, cancellation and stale callbacks, the single-picker lifecycle,
-non-closing actions, URL-handler errors, deferred dependency checks, and error
+Tests cover configuration defaults, overrides, validation and forwarding;
+headerless native tab-delimited entry formatting, author fallbacks, tab-stop
+overrides, complete multibyte titles and remote value sanitization; GitLab
+normalization and pagination; raw-diff command construction; identifier
+validation; Delta rendering and fallback; preview metadata; lazy loading;
+caching; retry; cancellation and stale callbacks; the single-picker lifecycle;
+non-closing actions; URL-handler errors; deferred dependency checks; and error
 sanitization. Tests require no network, credentials, or external executables.

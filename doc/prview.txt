@@ -5,7 +5,8 @@ CONTENTS                                                        *prview-contents
 
 1. Introduction                                              |prview-introduction|
 2. Setup                                                            |prview-setup|
-3. Command                                                        |:PRView|
+3. Configuration                                          |prview-configuration|
+4. Command                                                        |:PRView|
 
 ==============================================================================
 INTRODUCTION                                              *prview-introduction*
@@ -25,15 +26,41 @@ SETUP                                                            *prview-setup*
     require('prview').setup()
 <
 
-There are no feature-specific configuration options. Dependency checks and
-external processes are deferred until the command is invoked.
+Setup is idempotent. Dependency checks and external processes are deferred
+until the command is invoked.
+
+==============================================================================
+CONFIGURATION                                      *prview-configuration*
+
+The picker opens fullscreen by default. Pass per-picker fzf-lua options under
+`fzf_lua`; nested values override PRView's defaults. For example, to use a
+smaller window:
+
+>lua
+    require('prview').setup({
+        fzf_lua = {
+            winopts = {
+                fullscreen = false,
+                width = 0.9,
+            },
+        },
+    })
+<
+
+PRView retains its diff previewer, required tab-delimited selection fields,
+default and CTRL-O actions, and close cleanup. Additional fzf-lua actions, a
+tab-stop override, and a `winopts.on_close` callback are supported.
 
 ==============================================================================
 :PRView                                                          *:PRView*
 
 Opens the open merge request picker. Highlight a merge request to preview its
-complete, scrollable GitLab diff. Delta colors the diff when available; raw diff
-syntax is the fallback. Press CTRL-O to open the highlighted merge request in
-GitLab without closing the picker. ENTER does not close or replace the picker.
+complete, scrollable GitLab diff. Native fzf tab stops align its IID, author,
+and full title without a column header. The preview shows the draft state,
+complete branch route, and exact update time above the diff. Delta formats and
+colors the diff when available; raw diff syntax is the fallback. Delta's
+formatted file and hunk headers are preserved. Press CTRL-O to open the
+highlighted merge request in GitLab without closing the picker. ENTER does not
+close or replace the picker.
 
 vim:tw=78:ts=8:noet:ft=help:norl:

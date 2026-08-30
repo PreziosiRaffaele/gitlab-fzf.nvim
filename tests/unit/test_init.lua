@@ -56,4 +56,50 @@ T['does not require the git executable'] = function()
     eq(picked, true)
 end
 
+T['passes setup fzf-lua settings to the picker'] = function()
+    local received, picked
+    local previous_picker = package.loaded['prview.picker.fzf']
+    package.loaded['prview.picker.fzf'] = {
+        new = function(opts)
+            received = opts
+            return {
+                pick_merge_request = function()
+                    picked = true
+                end,
+            }
+        end,
+    }
+    prview.setup({
+        fzf_lua = {
+            prompt = 'Reviews> ',
+            winopts = { fullscreen = false },
+        },
+        _test = {
+            skip_dependency_check = true,
+            transport = {
+                list_merge_requests = function(callback)
+                    callback({
+                        {
+                            project_id = 1,
+                            iid = 2,
+                            title = 'MR',
+                            source_branch = 'feature',
+                            target_branch = 'main',
+                        },
+                    })
+                end,
+            },
+            renderer = {},
+        },
+    })
+    prview.open()
+    package.loaded['prview.picker.fzf'] = previous_picker
+
+    eq(received, {
+        prompt = 'Reviews> ',
+        winopts = { fullscreen = false },
+    })
+    eq(picked, true)
+end
+
 return T

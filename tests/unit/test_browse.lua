@@ -1,4 +1,5 @@
 local browse = require('prview.browse')
+local format = require('prview.format')
 local eq = MiniTest.expect.equality
 local T = MiniTest.new_set()
 
@@ -9,6 +10,10 @@ local mr = {
     source_branch = 'feature',
     target_branch = 'main',
 }
+
+local function preview_content(item, body)
+    return format.preview_header(item) .. '\n\n' .. body
+end
 
 local function context(overrides)
     local handlers
@@ -59,11 +64,11 @@ T['loads, renders, and caches the focused merge request diff'] = function()
     handlers.focus(mr, function(content, syntax)
         preview = { content, syntax }
     end)
-    eq(preview, { 'colored diff', 'ansi' })
+    eq(preview, { preview_content(mr, 'colored diff'), 'ansi' })
     handlers.focus(mr, function(content, syntax)
         preview = { content, syntax }
     end)
-    eq(preview, { 'colored diff', 'ansi' })
+    eq(preview, { preview_content(mr, 'colored diff'), 'ansi' })
     eq(diff_calls, 1)
     eq(render_calls, 1)
 end
@@ -88,11 +93,11 @@ T['retries a failed diff request on refocus'] = function()
     handlers.focus(mr, function(content, syntax)
         preview = { content, syntax }
     end)
-    eq(preview, { 'diff request failed', 'text' })
+    eq(preview, { preview_content(mr, 'diff request failed'), 'text' })
     handlers.focus(mr, function(content, syntax)
         preview = { content, syntax }
     end)
-    eq(preview, { 'rendered: raw diff', 'ansi' })
+    eq(preview, { preview_content(mr, 'rendered: raw diff'), 'ansi' })
     eq(calls, 2)
 end
 
@@ -140,8 +145,8 @@ T['moving focus cancels an active request and ignores its late callback'] = func
     first_callback('late diff')
     second_callback('current diff')
     eq(first_cancelled, true)
-    eq(first_preview, 'Loading merge request diff…')
-    eq(second_preview, 'rendered: current diff')
+    eq(first_preview, preview_content(mr, 'Loading merge request diff…'))
+    eq(second_preview, preview_content(other, 'rendered: current diff'))
 end
 
 T['closing the picker cancels active delta rendering'] = function()
@@ -171,7 +176,7 @@ T['closing the picker cancels active delta rendering'] = function()
     handlers.cancel()
     render_callback('late render', 'ansi')
     eq(render_cancelled, true)
-    eq(preview, 'Loading merge request diff…')
+    eq(preview, preview_content(mr, 'Loading merge request diff…'))
 end
 
 T['opens a valid GitLab web URL and rejects invalid URLs'] = function()

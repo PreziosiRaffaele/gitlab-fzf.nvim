@@ -48,35 +48,56 @@ local function memory_previewer(items, populate)
     }
 end
 
-function M.pick_merge_request(items, handlers)
+local function pick_merge_request(items, handlers, configured)
     local fzf = require('fzf-lua')
-    fzf.fzf_exec(entries(items, handlers.format or format.merge_request), {
+    local configured_on_close = configured.winopts and configured.winopts.on_close
+    local opts = vim.tbl_deep_extend('force', {
         prompt = 'Merge requests> ',
-        fzf_opts = { ['--delimiter'] = '\t', ['--with-nth'] = '2..' },
-        actions = {
-            ['default'] = { fn = function() end, exec_silent = true },
-            ['ctrl-o'] = {
-                fn = function(lines)
-                    local item = selected(items, lines)
-                    if item and handlers.open_web then
-                        handlers.open_web(item)
-                    end
-                end,
-                exec_silent = true,
-                header = 'open in GitLab',
-            },
-        },
-        previewer = memory_previewer(items, function(item, update)
-            handlers.focus(item, update)
-        end),
-        winopts = {
-            on_close = function()
-                if handlers.cancel then
-                    handlers.cancel()
+    }, vim.deepcopy(configured))
+    local required_fzf_opts = {
+        ['--delimiter'] = '\t',
+        ['--header-lines'] = false,
+        ['--with-nth'] = '2..',
+    }
+    opts.fzf_opts = vim.tbl_deep_extend('force', {}, opts.fzf_opts or {}, required_fzf_opts)
+    if opts.fzf_opts['--tabstop'] == nil then
+        opts.fzf_opts['--tabstop'] = 4
+    end
+    opts.actions = vim.tbl_deep_extend('force', {}, opts.actions or {}, {
+        ['default'] = { fn = function() end, exec_silent = true },
+        ['ctrl-o'] = {
+            fn = function(lines)
+                local item = selected(items, lines)
+                if item and handlers.open_web then
+                    handlers.open_web(item)
                 end
             end,
+            exec_silent = true,
+            header = 'open in GitLab',
         },
     })
+    opts.previewer = memory_previewer(items, function(item, update)
+        handlers.focus(item, update)
+    end)
+    opts.winopts = opts.winopts or {}
+    opts.winopts.on_close = function(...)
+        if handlers.cancel then
+            handlers.cancel()
+        end
+        if configured_on_close then
+            configured_on_close(...)
+        end
+    end
+    fzf.fzf_exec(entries(items, handlers.format or format.merge_request), opts)
+end
+
+function M.new(opts)
+    opts = opts or {}
+    return {
+        pick_merge_request = function(items, handlers)
+            pick_merge_request(items, handlers, opts)
+        end,
+    }
 end
 
 return M

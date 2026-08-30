@@ -31,7 +31,9 @@ end
 local function error_for(result)
     local detail = sanitize(result.stderr)
     local lower = detail:lower()
-    if lower:find('auth') or lower:find('401') then
+    if lower:find('502') and lower:find('bad gateway') then
+        return 'GitLab gateway returned 502 Bad Gateway. Check the GitLab host or reverse proxy and retry.'
+    elseif lower:find('auth') or lower:find('401') then
         return 'GitLab authentication failed. Set GITLAB_TOKEN or run `glab auth login` for this repository host.'
     elseif lower:find('not a git repository') then
         return 'PRView must be run inside a Git repository.'
@@ -108,7 +110,7 @@ function M.new(opts)
 
     function transport.list_merge_requests(callback)
         return request(
-            'projects/:id/merge_requests?state=opened&order_by=updated_at&sort=desc&per_page=100',
+            'projects/:fullpath/merge_requests?state=opened&order_by=updated_at&sort=desc&per_page=100',
             normalize_mr,
             callback
         )

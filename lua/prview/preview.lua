@@ -32,7 +32,7 @@ function M.new(opts)
             callback(diff, 'diff')
             return noop()
         end
-        return runner({ 'delta', '--paging=never', '--color-only' }, { text = true, stdin = diff }, function(result)
+        return runner({ 'delta', '--paging=never' }, { text = true, stdin = diff }, function(result)
             if result.code == 0 and type(result.stdout) == 'string' and result.stdout ~= '' then
                 callback(result.stdout, 'ansi')
                 return

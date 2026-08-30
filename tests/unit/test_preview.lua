@@ -4,7 +4,7 @@ local T = MiniTest.new_set()
 
 local diff = 'diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -1 +1 @@\n-a\n+b\n'
 
-T['renders a complete raw diff through delta'] = function()
+T["uses Delta's full structural formatting"] = function()
     local argv, opts, result
     local renderer = preview.new({
         executable = function(name)
@@ -19,7 +19,7 @@ T['renders a complete raw diff through delta'] = function()
     renderer.render(diff, function(content, syntax)
         result = { content, syntax }
     end)
-    eq(argv, { 'delta', '--paging=never', '--color-only' })
+    eq(argv, { 'delta', '--paging=never' })
     eq(opts, { text = true, stdin = diff })
     eq(result, { '\27[32m+b\27[0m\n', 'ansi' })
 end
