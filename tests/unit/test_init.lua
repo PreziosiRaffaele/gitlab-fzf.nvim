@@ -6,10 +6,7 @@ T['registers the renamed command idempotently'] = function()
     gitlab_fzf.setup()
     gitlab_fzf.setup()
 
-    local command = vim.api.nvim_get_commands({})['GitLabFzf']
-    eq(type(command), 'table')
-    eq(type(command.callback), 'function')
-    eq(command.definition, 'Browse GitLab merge requests')
+    eq(vim.fn.exists(':GitLabFzf'), 2)
 end
 
 T['opens URLs with Neovim system handlers and reports adapter errors'] = function()

@@ -17,9 +17,9 @@ focused merge request. Browsing does not change local repository or GitLab
 state. The explicit CTRL-B action checks out a merge request's source branch
 locally; GitLab resources are never changed.
 
-Required: glab and fzf-lua. Optional: delta for colored diff previews.
-Authenticate GitLab requests with GITLAB_TOKEN or `glab auth login`. GitLab Fzf
-does not handle tokens itself.
+Required: glab 1.80.0 or newer and fzf-lua. Optional: delta for colored diff
+previews. Authenticate GitLab requests with GITLAB_TOKEN or `glab auth login`.
+GitLab Fzf does not handle tokens itself.
 
 ==============================================================================
 SETUP                                                            *gitlab-fzf-setup*
@@ -68,6 +68,6 @@ diff. Changed areas come from the existing raw diff without another GitLab
 request. Delta formats and colors the diff when available; raw diff syntax is
 the fallback. Delta's formatted file and hunk headers are preserved. Press
 CTRL-O to open the highlighted merge request in GitLab without closing the
-picker. Press CTRL-B to close the picker and check out the highlighted merge 
-request's source branch through `glab`. After a successful checkout, GitLab Fzf 
-checks for files changed on disk. 
+picker. Press CTRL-B to close the picker and check out the highlighted merge
+request's source branch through `glab`. After a successful checkout, GitLab Fzf
+checks for files changed on disk.

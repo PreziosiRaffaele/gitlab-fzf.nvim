@@ -1,12 +1,13 @@
 # gitlab-fzf.nvim
 
 Browse open GitLab merge requests and inspect each full diff in a single
-fzf-lua picker. 
+fzf-lua picker. Open an MR in GitLab or check out its source branch directly
+from the picker.
 
 ## Requirements
 
 - Neovim 0.10 or newer
-- [`glab`](https://gitlab.com/gitlab-org/cli) (required)
+- [`glab`](https://gitlab.com/gitlab-org/cli) 1.80.0 or newer (required)
 - [`fzf-lua`](https://github.com/ibhagwan/fzf-lua) (required)
 - [`delta`](https://github.com/dandavison/delta) (optional, for colored diffs)
 
@@ -44,10 +45,13 @@ require('gitlab-fzf').setup({
 
 ## Usage
 
-Run `:GitLabFzf` and highlight an open merge request to load its complete, scrollable GitLab diff in the preview. 
+Run `:GitLabFzf` and highlight an open merge request to load its complete,
+scrollable GitLab diff in the preview.
 
-The preview shows the merge request title, branches, status, reviewers, labels, and first description
-paragraph, followed by changed-file counts grouped by top-level repository area and then the diff. 
+The preview shows the merge request title, branches, status, reviewers, labels,
+and first description paragraph, followed by changed-file counts grouped by
+top-level repository area and then the diff.
 
-Press `Ctrl-O` to open the highlighted merge request in the browser without closing the picker. 
-Press `Ctrl-B` to close the picker and check out the highlighted merge request's source branch.
+Press `Ctrl-O` to open the highlighted merge request in the browser without
+closing the picker. Press `Ctrl-B` to close the picker and check out the
+highlighted merge request's source branch.

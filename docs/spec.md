@@ -1,11 +1,12 @@
 # GitLab Fzf Specification
 
 ## Purpose and scope
-`gitlab-fzf.nvim` provides read-only browsing of open merge requests belonging
-to the GitLab project associated with the current repository. One `fzf-lua`
-picker lists merge requests and shows a compact merge request summary followed
-by the complete raw diff returned by GitLab for the focused entry. GitLab Fzf
-does not mutate user buffers, the working tree, the index, `HEAD`, Git refs, or
+`gitlab-fzf.nvim` provides browsing of open merge requests belonging to the
+GitLab project associated with the current repository. One `fzf-lua` picker
+lists merge requests and shows a compact merge request summary followed by the
+complete raw diff returned by GitLab for the focused entry. Browsing is
+read-only. The explicit source-branch checkout action may update unmodified
+buffers, the working tree, `HEAD`, and local Git refs. GitLab Fzf never mutates
 GitLab resources.
 
 ## Public API
@@ -20,11 +21,11 @@ The startup shim calls setup with defaults automatically.
 
 ## Dependencies and authentication
 
-`glab` and `fzf-lua` are required and checked only when `:GitLabFzf` is invoked.
-`delta` is optional. Authentication, project identity, and GitLab host selection
-are delegated to `glab`, using `GITLAB_TOKEN` or `glab auth login`. The plugin
-never reads or stores a token. No external process or dependency check runs at
-startup.
+`glab` 1.80.0 or newer and `fzf-lua` are required and checked only when
+`:GitLabFzf` is invoked. `delta` is optional. Authentication, project identity,
+and GitLab host selection are delegated to `glab`, using `GITLAB_TOKEN` or
+`glab auth login`. The plugin never reads or stores a token. No external process
+or dependency check runs at startup.
 
 ## Behavior
 
