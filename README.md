@@ -55,3 +55,7 @@ top-level repository area and then the diff.
 Press `Ctrl-O` to open the highlighted merge request in the browser without
 closing the picker. Press `Ctrl-B` to close the picker and check out the
 highlighted merge request's source branch.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
