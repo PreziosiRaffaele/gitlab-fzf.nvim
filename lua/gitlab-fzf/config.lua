@@ -5,6 +5,11 @@ local defaults = {
         winopts = {
             fullscreen = true,
         },
+        fzf_opts = {
+            ['--exact'] = true,
+            ['--no-info'] = true,
+            ['--no-sort'] = true,
+        },
     },
 }
 
