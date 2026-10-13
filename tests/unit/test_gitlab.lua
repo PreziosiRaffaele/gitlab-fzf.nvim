@@ -163,6 +163,41 @@ T['reports gateway failures without exposing the HTML response'] = function()
     eq(err, 'GitLab gateway returned 502 Bad Gateway. Check the GitLab host or reverse proxy and retry.')
 end
 
+local function diff_error(stderr)
+    local err
+    gitlab
+        .new({
+            runner = function(_, _, callback)
+                callback({ code = 1, stderr = stderr })
+            end,
+        })
+        .get_merge_request_diff({ iid = 7 }, function(_, value)
+            err = value
+        end)
+    return err
+end
+
+T['classifies authentication, permission, and remote failures'] = function()
+    local auth = 'GitLab authentication failed. Set GITLAB_TOKEN or run `glab auth login` for this repository host.'
+    local remote = 'No GitLab remote recognized by glab for this repository. Check the remote and `glab auth status`.'
+    eq(diff_error('GET https://gitlab.example.com/api/v4/x: 401 {message: 401 Unauthorized}'), auth)
+    eq(
+        diff_error('GET https://gitlab.example.com/api/v4/x: 403 {message: 403 Forbidden}'),
+        'GitLab denied access. Check your role in this project and the token scopes.'
+    )
+    eq(
+        diff_error(
+            'none of the git remotes configured for this repository point to a known GitLab host. Please use `glab auth login` to authenticate.'
+        ),
+        remote
+    )
+end
+
+T['does not misclassify failures that mention author or remote'] = function()
+    eq(diff_error('author not found'), 'GitLab request failed: author not found')
+    eq(diff_error('remote: internal error'), 'GitLab request failed: remote: internal error')
+end
+
 T['rejects malformed paginated JSON'] = function()
     local result, err = gitlab._decode_pages('{broken')
     eq(result, nil)

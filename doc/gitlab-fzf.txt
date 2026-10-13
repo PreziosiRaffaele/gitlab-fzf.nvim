@@ -34,9 +34,11 @@ until the command is invoked.
 ==============================================================================
 CONFIGURATION                                      *gitlab-fzf-configuration*
 
-The picker opens fullscreen by default. Pass per-picker fzf-lua options under
-`fzf_lua`; nested values override GitLab Fzf's defaults. For example, to use a
-smaller window:
+The picker opens fullscreen by default and passes the fzf flags `--exact`,
+`--no-sort` (keep the most-recently-updated order), and `--no-info`. Pass
+per-picker fzf-lua options under `fzf_lua`; nested values override GitLab
+Fzf's defaults, and `false` removes a default flag. For example, to use a
+smaller window with fuzzy matching:
 
 >lua
     require('gitlab-fzf').setup({
@@ -44,6 +46,9 @@ smaller window:
             winopts = {
                 fullscreen = false,
                 width = 0.9,
+            },
+            fzf_opts = {
+                ['--exact'] = false,
             },
         },
     })

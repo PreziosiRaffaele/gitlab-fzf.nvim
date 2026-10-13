@@ -15,6 +15,27 @@ local function selected(items, lines)
     return index and items[index] or nil
 end
 
+-- Terminal buffers drop their oldest lines beyond 'scrollback'; use the maximum
+-- so long ANSI previews keep the summary at the top.
+local MAX_SCROLLBACK = 100000
+
+local function write_preview(buffer, content, syntax)
+    if not vim.api.nvim_buf_is_valid(buffer) then
+        return
+    end
+    vim.bo[buffer].modifiable = true
+    vim.api.nvim_buf_set_lines(buffer, 0, -1, false, vim.split(content or '', '\n', { plain = true }))
+    if syntax == 'ansi' then
+        vim.api.nvim_buf_set_lines(buffer, 0, -1, false, {})
+        vim.bo[buffer].scrollback = MAX_SCROLLBACK
+        local channel = vim.api.nvim_open_term(buffer, {})
+        vim.api.nvim_chan_send(channel, content)
+    else
+        vim.bo[buffer].filetype = syntax or 'text'
+    end
+    vim.bo[buffer].modifiable = false
+end
+
 local function memory_previewer(items, populate)
     return {
         _ctor = function()
@@ -25,19 +46,7 @@ local function memory_previewer(items, populate)
                 local buffer = self:get_tmp_buffer()
                 self:set_preview_buf(buffer, true)
                 local function update(content, syntax)
-                    if not vim.api.nvim_buf_is_valid(buffer) then
-                        return
-                    end
-                    vim.bo[buffer].modifiable = true
-                    vim.api.nvim_buf_set_lines(buffer, 0, -1, false, vim.split(content or '', '\n', { plain = true }))
-                    if syntax == 'ansi' then
-                        vim.api.nvim_buf_set_lines(buffer, 0, -1, false, {})
-                        local channel = vim.api.nvim_open_term(buffer, {})
-                        vim.api.nvim_chan_send(channel, content)
-                    else
-                        vim.bo[buffer].filetype = syntax or 'text'
-                    end
-                    vim.bo[buffer].modifiable = false
+                    write_preview(buffer, content, syntax)
                 end
                 if item then
                     populate(item, update)
@@ -109,5 +118,7 @@ function M.new(opts)
         end,
     }
 end
+
+M._write_preview = write_preview
 
 return M

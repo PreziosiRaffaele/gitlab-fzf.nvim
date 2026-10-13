@@ -166,4 +166,18 @@ T['checks out the highlighted merge request source branch and closes fzf'] = fun
     eq(checked_out, items[2])
 end
 
+T['keeps the top of long ANSI previews'] = function()
+    local buffer = vim.api.nvim_create_buf(false, true)
+    local lines = { 'Summary' }
+    for index = 2, 15000 do
+        lines[index] = 'line ' .. index
+    end
+    picker._write_preview(buffer, table.concat(lines, '\n'), 'ansi')
+    vim.wait(2000, function()
+        return vim.api.nvim_buf_line_count(buffer) >= 15000
+    end)
+    eq(vim.api.nvim_buf_get_lines(buffer, 0, 1, false), { 'Summary' })
+    vim.api.nvim_buf_delete(buffer, { force = true })
+end
+
 return T

@@ -9,6 +9,11 @@ T['defaults the picker to fullscreen'] = function()
             winopts = {
                 fullscreen = true,
             },
+            fzf_opts = {
+                ['--exact'] = true,
+                ['--no-info'] = true,
+                ['--no-sort'] = true,
+            },
         },
     })
 end
@@ -19,6 +24,7 @@ T['deeply merges fzf-lua settings without mutating input'] = function()
             fullscreen = false,
             preview = { layout = 'vertical' },
         },
+        fzf_opts = { ['--exact'] = false },
         prompt = 'Reviews> ',
     }
     local resolved = config.resolve({ fzf_lua = supplied })
@@ -28,6 +34,11 @@ T['deeply merges fzf-lua settings without mutating input'] = function()
                 fullscreen = false,
                 preview = { layout = 'vertical' },
             },
+            fzf_opts = {
+                ['--exact'] = false,
+                ['--no-info'] = true,
+                ['--no-sort'] = true,
+            },
             prompt = 'Reviews> ',
         },
     })
@@ -36,6 +47,7 @@ T['deeply merges fzf-lua settings without mutating input'] = function()
             fullscreen = false,
             preview = { layout = 'vertical' },
         },
+        fzf_opts = { ['--exact'] = false },
         prompt = 'Reviews> ',
     })
 end
