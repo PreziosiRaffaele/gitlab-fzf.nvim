@@ -28,8 +28,10 @@ With lazy.nvim:
 
 ## Configuration
 
-The picker opens fullscreen by default. Pass per-picker fzf-lua options through
-`fzf_lua`; nested values override GitLab Fzf's defaults:
+The picker opens fullscreen by default and passes the fzf flags `--exact`,
+`--no-sort` (keep the most-recently-updated order), and `--no-info`. Pass
+per-picker fzf-lua options through `fzf_lua`; nested values override GitLab
+Fzf's defaults, and `false` removes a default flag:
 
 ```lua
 require('gitlab-fzf').setup({
@@ -38,6 +40,9 @@ require('gitlab-fzf').setup({
     winopts = {
       fullscreen = false,
       width = 0.9,
+    },
+    fzf_opts = {
+      ['--exact'] = false, -- use fuzzy matching
     },
   },
 })

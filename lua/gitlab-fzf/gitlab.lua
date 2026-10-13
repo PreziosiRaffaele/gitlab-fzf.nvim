@@ -15,7 +15,7 @@ local function default_runner(argv, opts, callback)
     end)
     return {
         cancel = function()
-            proc:kill(15)
+            pcall(proc.kill, proc, 15)
         end,
     }
 end
@@ -28,17 +28,32 @@ local function sanitize(value)
     return vim.trim(value)
 end
 
+local function has_any(text, patterns)
+    for _, pattern in ipairs(patterns) do
+        if text:find(pattern) then
+            return true
+        end
+    end
+    return false
+end
+
+-- Match specific glab and HTTP phrases; broad words such as "auth" or "remote"
+-- also appear in unrelated output like "author" or Git's "remote:" prefix.
 local function error_for(result, fallback)
     local detail = sanitize(result.stderr)
     local lower = detail:lower()
-    if lower:find('502') and lower:find('bad gateway') then
+    if lower:find('%f[%d]502%f[%D]') and lower:find('bad gateway', 1, true) then
         return 'GitLab gateway returned 502 Bad Gateway. Check the GitLab host or reverse proxy and retry.'
-    elseif lower:find('auth') or lower:find('401') then
-        return 'GitLab authentication failed. Set GITLAB_TOKEN or run `glab auth login` for this repository host.'
-    elseif lower:find('not a git repository') then
+    elseif lower:find('not a git repository', 1, true) then
         return 'GitLab Fzf must be run inside a Git repository.'
-    elseif lower:find('remote') or lower:find('hostname') then
+    elseif has_any(lower, { 'none of the git remotes', 'no git remotes', 'known gitlab host' }) then
         return 'No GitLab remote recognized by glab for this repository. Check the remote and `glab auth status`.'
+    elseif
+        has_any(lower, { '%f[%d]401%f[%D]', 'unauthorized', 'authentication', 'not authenticated', 'invalid token' })
+    then
+        return 'GitLab authentication failed. Set GITLAB_TOKEN or run `glab auth login` for this repository host.'
+    elseif has_any(lower, { '%f[%d]403%f[%D]', 'forbidden', 'insufficient scope' }) then
+        return 'GitLab denied access. Check your role in this project and the token scopes.'
     end
     return (fallback or 'GitLab request failed') .. (detail ~= '' and ': ' .. detail or '.')
 end

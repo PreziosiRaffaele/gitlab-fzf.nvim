@@ -13,9 +13,12 @@ GitLab resources.
 
 Call `require('gitlab-fzf').setup(opts)`. Setup is idempotent, registers
 `:GitLabFzf`, and accepts an optional `fzf_lua` table containing per-picker
-fzf-lua options. Its default is `{ winopts = { fullscreen = true } }`. User
-values are deep-merged over that default; setting `winopts.fullscreen = false`
-restores a non-fullscreen picker. Each setup call replaces prior settings.
+fzf-lua options. Its default opens the picker fullscreen and sets the fzf
+flags `--exact` (exact substring matching), `--no-sort` (keep GitLab's
+most-recently-updated order while filtering), and `--no-info` (hide the match
+counter). User values are deep-merged over that default; setting
+`winopts.fullscreen = false` restores a non-fullscreen picker, and setting a
+default flag to `false` in `fzf_opts` removes it. Each setup call replaces prior settings.
 Invalid types and unknown top-level GitLab Fzf options produce clear errors.
 The startup shim calls setup with defaults automatically.
 
@@ -76,7 +79,9 @@ concise no-textual-changes message.
 
 When Delta is executable, GitLab Fzf passes the raw diff to
 `delta --paging=never` and displays its fully formatted ANSI output, including
-Delta's file and hunk headers. Delta reads the user's existing configuration.
+Delta's file and hunk headers. The ANSI preview uses a terminal buffer with
+the maximum `'scrollback'` of 100000 lines so the summary is not dropped from
+the top of long diffs. Delta reads the user's existing configuration.
 If Delta is missing or fails, GitLab Fzf displays the raw content with Neovim's
 `diff` syntax.
 

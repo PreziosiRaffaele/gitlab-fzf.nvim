@@ -103,6 +103,7 @@ T['passes setup fzf-lua settings to the picker'] = function()
     package.loaded['gitlab-fzf.picker.fzf'] = previous_picker
 
     eq(received, {
+        fzf_opts = { ['--exact'] = true, ['--no-info'] = true, ['--no-sort'] = true },
         prompt = 'Reviews> ',
         winopts = { fullscreen = false },
     })
